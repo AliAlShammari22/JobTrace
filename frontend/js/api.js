@@ -1,6 +1,4 @@
-// const API_BASE = "https://jobtrace-api.onrender.com/api";
-// Uncomment the line above and comment the line below before deploying to Netlify
-const API_BASE = "http://localhost:5001/api";
+const API_BASE = "https://jobtrace-fj3z.onrender.com/api";
 
 // ── Token helpers ──
 const getToken  = ()        => localStorage.getItem("jt_token");
