@@ -1092,21 +1092,104 @@ input.input-error, textarea.input-error { border-color: var(--danger); }
 /* ════════════════════════════════════════
    RESPONSIVE
 ════════════════════════════════════════ */
+
+/* ── Tablet (≤768px) ── */
 @media (max-width: 768px) {
-  .main-content { padding: 20px 16px 48px; }
-  .header-inner { padding: 0 16px; }
-  .toolbar { gap: 10px; }
-  .toolbar-right { width: 100%; justify-content: flex-end; }
-  .search-wrapper { max-width: 100%; }
-  .job-notes-preview { max-width: 200px; }
-  .user-greeting { display: none; }
+  /* Layout */
+  .main-content { padding: 16px 14px 48px; gap: 16px; }
+  .header-inner { padding: 0 14px; height: 56px; }
+
+  /* Header — shrink buttons */
+  .header-actions { gap: 8px; }
+  .btn-sm { padding: 6px 10px; font-size: .78rem; }
+  .header-actions .btn-ghost:not([onclick="logout()"]) svg { display: none; }
+
+  /* Welcome banner */
+  .welcome-banner { padding: 20px 20px 16px; }
+  .welcome-heading { font-size: 1.3rem; }
+  .welcome-date { display: none; }
+
+  /* Stats grid — 3 cols */
+  .stats-grid { grid-template-columns: repeat(3, 1fr); gap: 10px; }
+  .stat-card { padding: 14px 12px 12px; }
+  .stat-value { font-size: 1.6rem; }
+  .stat-icon-wrap { width: 32px; height: 32px; }
+
+  /* Toolbar */
+  .toolbar-panel { padding: 12px 14px; flex-wrap: wrap; gap: 10px; }
+  .toolbar-panel-left { flex-wrap: wrap; gap: 8px; }
+  .search-wrapper { max-width: 100%; min-width: 0; flex: 1 1 100%; }
+  .toolbar-panel .select-input { flex: 1; min-width: 0; }
+
+  /* Job cards */
+  .job-notes-preview { max-width: 180px; }
+  .card-body { padding: 12px 14px; }
+
+  /* Modals */
+  .modal { max-width: 100%; border-radius: var(--radius-md) var(--radius-md) 0 0; }
+  .modal-overlay { align-items: flex-end; padding: 0; }
+  .modal-ai { height: min(520px, 85vh); border-radius: var(--radius-md) var(--radius-md) 0 0; }
+
+  /* Kanban — 2 cols */
+  .kanban-board { grid-template-columns: repeat(2, 1fr); gap: 10px; }
 }
 
+/* ── Mobile (≤480px) ── */
 @media (max-width: 480px) {
-  .auth-card { padding: 24px 20px; }
-  .modal { border-radius: var(--radius-md); }
-  .modal-header { padding: 16px 18px 0; }
-  #jobForm, .ai-input-row, .ai-messages, .ai-suggestions, .ai-subtitle { padding-left: 18px; padding-right: 18px; }
-  .modal-footer { padding: 16px 18px; }
-  .job-card-actions { width: 100%; justify-content: flex-end; }
+  /* Header — hide AI Advisor label, keep icon */
+  .header-actions { gap: 6px; }
+  .header-actions .btn-ghost { padding: 6px 8px; }
+
+  /* Welcome banner */
+  .welcome-banner { padding: 16px 16px 14px; gap: 10px; }
+  .welcome-heading { font-size: 1.15rem; }
+  .welcome-sub { font-size: .8rem; }
+  .welcome-quote { font-size: .75rem; }
+
+  /* Stats — 2 cols */
+  .stats-grid { grid-template-columns: repeat(2, 1fr); gap: 8px; }
+  .stat-value { font-size: 1.5rem; }
+  .stat-label { font-size: .68rem; }
+
+  /* Toolbar — stack everything */
+  .toolbar-panel { flex-direction: column; align-items: stretch; gap: 8px; }
+  .toolbar-panel-left { flex-direction: column; gap: 8px; }
+  .toolbar-panel .select-input { width: 100%; }
+  .view-toggle { align-self: flex-end; }
+
+  /* Job cards */
+  .job-card { flex-direction: column; }
+  .card-accent { width: 100%; height: 4px; }
+  .card-body { padding: 12px; gap: 8px; }
+  .card-header { flex-wrap: wrap; gap: 8px; }
+  .card-top-right { width: 100%; justify-content: space-between; }
+  .job-pipeline { overflow-x: auto; }
+  .job-notes-preview { max-width: 100%; }
+
+  /* Modal — full bottom sheet */
+  .modal-header { padding: 16px 16px 0; }
+  #jobForm, .modal-sm > p, .modal-sm > .modal-footer { padding-left: 16px; padding-right: 16px; }
+  .modal-footer { padding: 16px; }
+  .modal-sm { padding: 20px 16px; }
+
+  /* Status pills in modal */
+  .status-picker { gap: 6px; }
+  .status-pill { padding: 7px 6px; font-size: .75rem; }
+
+  /* AI modal */
+  .ai-input-row, .ai-messages, .ai-suggestions, .ai-subtitle { padding-left: 16px; padding-right: 16px; }
+
+  /* Kanban — 1 col */
+  .kanban-board { grid-template-columns: 1fr; }
+
+  /* Auth */
+  .auth-card { padding: 20px 16px; }
+  .auth-right { padding: 24px 16px; }
+}
+
+/* ── Very small screens (≤360px) ── */
+@media (max-width: 360px) {
+  .stats-grid { grid-template-columns: repeat(2, 1fr); }
+  .welcome-heading { font-size: 1rem; }
+  .header-actions .btn-ghost[onclick="logout()"] span { display: none; }
 }
