@@ -853,6 +853,15 @@ input.input-error, textarea.input-error { border-color: var(--danger); }
 }
 
 /* ── AI Modal ── */
+.bottom-sheet-handle {
+  width: 36px; height: 4px;
+  background: var(--border-solid);
+  border-radius: 99px;
+  margin: 10px auto 0;
+  display: none;
+}
+@media (max-width: 768px) { .bottom-sheet-handle { display: block; } }
+
 .ai-title { display: flex; align-items: center; gap: 8px; color: var(--primary); }
 .ai-subtitle { font-size: .85rem; color: var(--text-secondary); padding: 0 24px; margin-bottom: 12px; }
 
@@ -1125,10 +1134,28 @@ input.input-error, textarea.input-error { border-color: var(--danger); }
   .job-notes-preview { max-width: 180px; }
   .card-body { padding: 12px 14px; }
 
+  /* Add Job modal — tablet */
+  .modal-job-icon { width: 36px; height: 36px; }
+  .modal-title-group gap { gap: 10px; }
+  #jobForm input, #jobForm select, #jobForm textarea { height: 42px; font-size: .9rem; }
+  #jobForm textarea { height: auto; min-height: 80px; }
+  .status-pill { padding: 9px 8px; font-size: .8rem; }
+  .modal-footer .btn-primary { flex: 1; }
+
   /* Modals */
   .modal { max-width: 100%; border-radius: var(--radius-md) var(--radius-md) 0 0; }
   .modal-overlay { align-items: flex-end; padding: 0; }
-  .modal-ai { height: min(520px, 85vh); border-radius: var(--radius-md) var(--radius-md) 0 0; }
+  .modal-ai { height: 88vh; border-radius: var(--radius-md) var(--radius-md) 0 0; }
+
+  /* AI modal — tablet */
+  .ai-subtitle { padding: 0 16px; font-size: .82rem; }
+  .ai-messages { padding: 0 16px; gap: 10px; }
+  .ai-bubble { max-width: 88%; font-size: .85rem; }
+  .ai-suggestions { padding: 10px 16px; gap: 6px; }
+  .suggestion-chip { padding: 7px 12px; font-size: .78rem; }
+  .ai-input-row { padding: 12px 16px; gap: 8px; }
+  .ai-input-row input { height: 42px; font-size: .9rem; }
+  .ai-input-row .btn { padding: 0 16px; height: 42px; flex-shrink: 0; }
 
   /* Kanban — 2 cols */
   .kanban-board { grid-template-columns: repeat(2, 1fr); gap: 10px; }
@@ -1176,8 +1203,35 @@ input.input-error, textarea.input-error { border-color: var(--danger); }
   .status-picker { gap: 6px; }
   .status-pill { padding: 7px 6px; font-size: .75rem; }
 
-  /* AI modal */
-  .ai-input-row, .ai-messages, .ai-suggestions, .ai-subtitle { padding-left: 16px; padding-right: 16px; }
+  /* AI modal — mobile full experience */
+  .modal-ai { height: 92vh; }
+  .ai-title h2 { font-size: 1rem; }
+  .ai-subtitle { display: none; }
+  .ai-messages { padding: 0 14px; gap: 10px; }
+  .ai-bubble { max-width: 90%; padding: 9px 12px; font-size: .84rem; }
+  .ai-suggestions { padding: 8px 14px; gap: 6px; flex-wrap: wrap; }
+  .suggestion-chip { padding: 8px 12px; font-size: .77rem; flex: 1 1 auto; text-align: center; }
+  .ai-input-row { padding: 10px 14px 14px; gap: 8px; }
+  .ai-input-row input { height: 44px; font-size: .9rem; border-radius: var(--radius-sm); }
+  .ai-input-row .btn { height: 44px; padding: 0 18px; font-size: .875rem; flex-shrink: 0; }
+
+  /* Add Job modal — mobile */
+  .modal-accent-bar { height: 3px; }
+  .modal-job-header { padding-top: 14px; }
+  .modal-job-icon { display: none; }
+  .modal-title-group { gap: 8px; }
+  #modalTitle { font-size: 1rem; }
+  .modal-subtitle { font-size: .72rem; }
+  #jobForm { gap: 14px; }
+  .form-row { grid-template-columns: 1fr; gap: 12px; }
+  #jobForm input[type="text"],
+  #jobForm input[type="date"],
+  #jobForm select { height: 46px; font-size: .9rem; }
+  .status-picker { gap: 6px; }
+  .status-pill { padding: 10px 6px; font-size: .78rem; flex: 1; }
+  .modal-footer { gap: 8px; }
+  .modal-footer .btn-ghost { display: none; }
+  .modal-footer .btn-primary { flex: 1; height: 46px; font-size: .95rem; }
 
   /* Kanban — 1 col */
   .kanban-board { grid-template-columns: 1fr; }
