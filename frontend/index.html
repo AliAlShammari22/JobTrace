@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>JobTrace — Track Your Career Journey</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="css/style.css" />
+  </head>
+  <body class="auth-page">
+
+    <div class="auth-split">
+
+      <!-- ── Left Panel ── -->
+      <div class="auth-left">
+
+        <!-- Decorative background shapes -->
+        <div class="auth-shape auth-shape-1"></div>
+        <div class="auth-shape auth-shape-2"></div>
+        <div class="auth-shape auth-shape-3"></div>
+
+        <div class="auth-left-content">
+
+          <!-- Logo -->
+          <div class="brand-logo auth-left-logo">
+            <svg width="36" height="36" viewBox="0 0 32 32" fill="none">
+              <rect width="32" height="32" rx="8" fill="#ea580c"/>
+              <path d="M8 10h16M8 16h10M8 22h13" stroke="white" stroke-width="2.5" stroke-linecap="round"/>
+            </svg>
+            <span>JobTrace</span>
+          </div>
+
+          <!-- Headline -->
+          <div class="auth-hero">
+            <h1 class="auth-headline">
+              Track Every<br/>
+              Application.<br/>
+              <span class="auth-headline-accent">Land Your Dream Job.</span>
+            </h1>
+            <p class="auth-subheadline">
+              One place to manage your entire job search — from first application to final offer.
+            </p>
+          </div>
+
+          <!-- Feature list -->
+          <ul class="auth-features">
+            <li>
+              <span class="feature-icon">📋</span>
+              <span>Organize all applications in one dashboard</span>
+            </li>
+            <li>
+              <span class="feature-icon">🤖</span>
+              <span>AI career advisor powered by Claude</span>
+            </li>
+            <li>
+              <span class="feature-icon">📊</span>
+              <span>Visual pipeline: Applied → Interview → Offer</span>
+            </li>
+            <li>
+              <span class="feature-icon">🔍</span>
+              <span>Search, filter, and sort with ease</span>
+            </li>
+          </ul>
+
+          <!-- Mock UI preview cards -->
+          <div class="auth-preview">
+            <div class="preview-card">
+              <div class="preview-accent" style="background:#3b82f6"></div>
+              <div class="preview-body">
+                <div class="preview-top">
+                  <div>
+                    <div class="preview-company">Google</div>
+                    <div class="preview-role">Frontend Engineer</div>
+                  </div>
+                  <span class="preview-badge" style="background:rgba(219,234,254,.9);color:#1d4ed8;">Applied</span>
+                </div>
+                <div class="preview-bar">
+                  <div class="preview-dot filled"></div>
+                  <div class="preview-line"></div>
+                  <div class="preview-dot"></div>
+                  <div class="preview-line"></div>
+                  <div class="preview-dot"></div>
+                </div>
+              </div>
+            </div>
+            <div class="preview-card">
+              <div class="preview-accent" style="background:#f59e0b"></div>
+              <div class="preview-body">
+                <div class="preview-top">
+                  <div>
+                    <div class="preview-company">Airbnb</div>
+                    <div class="preview-role">Product Designer</div>
+                  </div>
+                  <span class="preview-badge" style="background:rgba(254,243,199,.9);color:#b45309;">Interview</span>
+                </div>
+                <div class="preview-bar">
+                  <div class="preview-dot filled"></div>
+                  <div class="preview-line filled"></div>
+                  <div class="preview-dot filled"></div>
+                  <div class="preview-line"></div>
+                  <div class="preview-dot"></div>
+                </div>
+              </div>
+            </div>
+            <div class="preview-card">
+              <div class="preview-accent" style="background:#22c55e"></div>
+              <div class="preview-body">
+                <div class="preview-top">
+                  <div>
+                    <div class="preview-company">Stripe</div>
+                    <div class="preview-role">Backend Developer</div>
+                  </div>
+                  <span class="preview-badge" style="background:rgba(220,252,231,.9);color:#15803d;">Offer 🎉</span>
+                </div>
+                <div class="preview-bar">
+                  <div class="preview-dot filled"></div>
+                  <div class="preview-line filled"></div>
+                  <div class="preview-dot filled"></div>
+                  <div class="preview-line filled"></div>
+                  <div class="preview-dot filled"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- ── Right Panel ── -->
+      <div class="auth-right">
+
+        <div class="auth-right-inner">
+
+          <!-- Mobile logo -->
+          <div class="brand-logo auth-mobile-logo">
+            <svg width="30" height="30" viewBox="0 0 32 32" fill="none">
+              <rect width="32" height="32" rx="8" fill="#ea580c"/>
+              <path d="M8 10h16M8 16h10M8 22h13" stroke="white" stroke-width="2.5" stroke-linecap="round"/>
+            </svg>
+            <span>JobTrace</span>
+          </div>
+
+          <div class="auth-form-heading">
+            <h2 id="formHeading">Welcome back</h2>
+            <p id="formSubheading">Sign in to your account to continue</p>
+          </div>
+
+          <!-- Auth Card -->
+          <div class="auth-card">
+
+            <!-- Tabs -->
+            <div class="auth-tabs">
+              <button class="auth-tab active" id="loginTab" onclick="switchTab('login')">
+                Sign In
+              </button>
+              <button class="auth-tab" id="registerTab" onclick="switchTab('register')">
+                Create Account
+              </button>
+            </div>
+
+            <!-- Alert -->
+            <div class="alert" id="authAlert" role="alert" aria-live="polite"></div>
+
+            <!-- Login Form -->
+            <form class="auth-form" id="loginForm" novalidate>
+              <div class="form-group">
+                <label for="loginEmail">Email</label>
+                <input type="email" id="loginEmail" placeholder="you@example.com" autocomplete="email" required />
+                <span class="field-error" id="loginEmailError"></span>
+              </div>
+              <div class="form-group">
+                <label for="loginPassword">Password</label>
+                <div class="input-wrapper">
+                  <input type="password" id="loginPassword" placeholder="Enter your password" autocomplete="current-password" required />
+                  <button type="button" class="toggle-password" onclick="togglePassword('loginPassword', this)" aria-label="Toggle password">
+                    <svg class="eye-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                      <circle cx="12" cy="12" r="3"/>
+                    </svg>
+                  </button>
+                </div>
+                <span class="field-error" id="loginPasswordError"></span>
+              </div>
+              <button type="submit" class="btn btn-primary btn-full" id="loginBtn">
+                <span class="btn-text">Sign In</span>
+                <span class="btn-spinner" hidden></span>
+              </button>
+            </form>
+
+            <!-- Register Form -->
+            <form class="auth-form hidden" id="registerForm" novalidate>
+              <div class="form-group">
+                <label for="registerName">Full Name</label>
+                <input type="text" id="registerName" placeholder="John Doe" autocomplete="name" required />
+                <span class="field-error" id="registerNameError"></span>
+              </div>
+              <div class="form-group">
+                <label for="registerEmail">Email</label>
+                <input type="email" id="registerEmail" placeholder="you@example.com" autocomplete="email" required />
+                <span class="field-error" id="registerEmailError"></span>
+              </div>
+              <div class="form-group">
+                <label for="registerPassword">Password</label>
+                <div class="input-wrapper">
+                  <input type="password" id="registerPassword" placeholder="At least 6 characters" autocomplete="new-password" required />
+                  <button type="button" class="toggle-password" onclick="togglePassword('registerPassword', this)" aria-label="Toggle password">
+                    <svg class="eye-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                      <circle cx="12" cy="12" r="3"/>
+                    </svg>
+                  </button>
+                </div>
+                <span class="field-error" id="registerPasswordError"></span>
+              </div>
+              <div class="form-group">
+                <label for="registerConfirm">Confirm Password</label>
+                <div class="input-wrapper">
+                  <input type="password" id="registerConfirm" placeholder="Repeat your password" autocomplete="new-password" required />
+                  <button type="button" class="toggle-password" onclick="togglePassword('registerConfirm', this)" aria-label="Toggle password">
+                    <svg class="eye-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                      <circle cx="12" cy="12" r="3"/>
+                    </svg>
+                  </button>
+                </div>
+                <span class="field-error" id="registerConfirmError"></span>
+              </div>
+              <button type="submit" class="btn btn-primary btn-full" id="registerBtn">
+                <span class="btn-text">Create Account</span>
+                <span class="btn-spinner" hidden></span>
+              </button>
+            </form>
+
+          </div>
+
+          <p class="auth-footer">&copy; 2026 JobTrace. Built for CODED Academy.</p>
+
+        </div>
+      </div>
+
+    </div>
+
+    <script src="js/api.js"></script>
+    <script src="js/auth.js"></script>
+  </body>
+</html>

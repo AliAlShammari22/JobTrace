@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>JobTrace — Dashboard</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="css/style.css" />
+  </head>
+  <body class="dashboard-page">
+
+    <!-- ── Header ── -->
+    <header class="header">
+      <div class="header-inner">
+        <div class="brand-logo">
+          <svg width="28" height="28" viewBox="0 0 32 32" fill="none">
+            <rect width="32" height="32" rx="8" fill="#ea580c"/>
+            <path d="M8 10h16M8 16h10M8 22h13" stroke="white" stroke-width="2.5" stroke-linecap="round"/>
+          </svg>
+          <span>JobTrace</span>
+        </div>
+        <div class="header-actions">
+<button class="btn btn-ghost btn-sm" onclick="openAI()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="15" height="15">
+              <path d="M12 2a10 10 0 1 0 10 10A10 10 0 0 0 12 2zm0 18a8 8 0 1 1 8-8 8 8 0 0 1-8 8z"/>
+              <path d="M12 6v6l4 2"/>
+            </svg>
+            AI Advisor
+          </button>
+          <button class="btn btn-primary btn-sm" onclick="openJobModal()">+ Add Job</button>
+          <button class="btn btn-ghost btn-sm" onclick="logout()">Sign Out</button>
+        </div>
+      </div>
+    </header>
+
+    <!-- ── Main ── -->
+    <main class="main-content">
+
+      <!-- Welcome Banner -->
+      <section class="welcome-banner">
+        <div class="welcome-shape welcome-shape-1"></div>
+        <div class="welcome-shape welcome-shape-2"></div>
+        <div class="welcome-content">
+          <div>
+            <h2 class="welcome-heading" id="welcomeHeading">Welcome back!</h2>
+            <p class="welcome-sub">Here's your job search overview for today.</p>
+          </div>
+          <div class="welcome-date" id="welcomeDate"></div>
+        </div>
+        <!-- Quote inline -->
+        <div class="welcome-quote" id="quoteBanner"></div>
+      </section>
+
+      <!-- Stats Grid -->
+      <section class="stats-grid" id="statsGrid">
+        <div class="stat-card stat-total">
+          <div class="stat-card-top">
+            <div class="stat-icon-wrap stat-icon-total">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20">
+                <rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/>
+              </svg>
+            </div>
+          </div>
+          <span class="stat-value" id="statTotal">—</span>
+          <span class="stat-label">Total Jobs</span>
+        </div>
+
+        <div class="stat-card stat-applied">
+          <div class="stat-card-top">
+            <div class="stat-icon-wrap stat-icon-applied">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20">
+                <path d="M22 2L11 13"/><path d="M22 2L15 22 11 13 2 9l20-7z"/>
+              </svg>
+            </div>
+          </div>
+          <span class="stat-value" id="statApplied">—</span>
+          <span class="stat-label">Applied</span>
+        </div>
+
+        <div class="stat-card stat-interview">
+          <div class="stat-card-top">
+            <div class="stat-icon-wrap stat-icon-interview">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20">
+                <rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/>
+                <line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>
+              </svg>
+            </div>
+          </div>
+          <span class="stat-value" id="statInterview">—</span>
+          <span class="stat-label">Interviews</span>
+        </div>
+
+        <div class="stat-card stat-offer">
+          <div class="stat-card-top">
+            <div class="stat-icon-wrap stat-icon-offer">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20">
+                <polyline points="20 6 9 17 4 12"/>
+              </svg>
+            </div>
+          </div>
+          <span class="stat-value" id="statOffer">—</span>
+          <span class="stat-label">Offers</span>
+        </div>
+
+        <div class="stat-card stat-rejected">
+          <div class="stat-card-top">
+            <div class="stat-icon-wrap stat-icon-rejected">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20">
+                <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+              </svg>
+            </div>
+          </div>
+          <span class="stat-value" id="statRejected">—</span>
+          <span class="stat-label">Rejected</span>
+        </div>
+      </section>
+
+      <!-- Streak -->
+      <div class="streak-row">
+        <div class="streak-badge" id="streakBadge" hidden></div>
+      </div>
+
+      <!-- Toolbar Panel -->
+      <div class="toolbar-panel">
+        <div class="toolbar-panel-left">
+          <div class="search-wrapper">
+            <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/>
+            </svg>
+            <input type="search" id="searchInput" placeholder="Search company or job title…" autocomplete="off"/>
+          </div>
+          <select id="statusFilter" class="select-input">
+            <option value="All">All Statuses</option>
+            <option value="Applied">Applied</option>
+            <option value="Interview">Interview</option>
+            <option value="Offer">Offer</option>
+            <option value="Rejected">Rejected</option>
+          </select>
+          <select id="sortSelect" class="select-input">
+            <option value="newest">Newest First</option>
+            <option value="oldest">Oldest First</option>
+            <option value="company">Company A–Z</option>
+          </select>
+        </div>
+        <div class="view-toggle">
+          <button class="view-btn" id="viewList" onclick="setView('list')" title="List view">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="15" height="15">
+              <line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/>
+              <circle cx="3" cy="6" r="1" fill="currentColor"/><circle cx="3" cy="12" r="1" fill="currentColor"/><circle cx="3" cy="18" r="1" fill="currentColor"/>
+            </svg>
+          </button>
+          <button class="view-btn" id="viewKanban" onclick="setView('kanban')" title="Board view">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="15" height="15">
+              <rect x="3" y="3" width="5" height="18" rx="1"/><rect x="10" y="3" width="5" height="12" rx="1"/><rect x="17" y="3" width="5" height="15" rx="1"/>
+            </svg>
+          </button>
+        </div>
+      </div>
+
+      <!-- Alert -->
+      <div class="alert" id="dashAlert" role="alert" aria-live="polite"></div>
+
+      <!-- Jobs Section -->
+      <section class="jobs-section">
+        <div class="jobs-section-header">
+          <h3 class="jobs-section-title">Your Applications</h3>
+          <span class="jobs-count-badge" id="jobsCount"></span>
+        </div>
+        <div class="jobs-list" id="jobsList">
+          <div class="empty-state" id="emptyState" hidden>
+            <div class="empty-illustration">
+              <svg width="80" height="80" viewBox="0 0 80 80" fill="none">
+                <circle cx="40" cy="40" r="38" fill="#fff7ed" stroke="#fed7aa" stroke-width="2"/>
+                <rect x="22" y="24" width="36" height="32" rx="4" fill="#ffedd5" stroke="#fb923c" stroke-width="1.5"/>
+                <line x1="29" y1="33" x2="51" y2="33" stroke="#fb923c" stroke-width="1.5" stroke-linecap="round"/>
+                <line x1="29" y1="40" x2="44" y2="40" stroke="#fed7aa" stroke-width="1.5" stroke-linecap="round"/>
+                <line x1="29" y1="47" x2="47" y2="47" stroke="#fed7aa" stroke-width="1.5" stroke-linecap="round"/>
+                <circle cx="57" cy="57" r="10" fill="#ea580c"/>
+                <line x1="57" y1="53" x2="57" y2="61" stroke="white" stroke-width="2" stroke-linecap="round"/>
+                <line x1="53" y1="57" x2="61" y2="57" stroke="white" stroke-width="2" stroke-linecap="round"/>
+              </svg>
+            </div>
+            <h3>No applications yet</h3>
+            <p>Start tracking your job search by adding your first application.</p>
+            <button class="btn btn-primary" onclick="openJobModal()" style="margin-top:8px">+ Add Your First Job</button>
+          </div>
+          <div class="loading-state" id="loadingState">
+            <div class="spinner"></div>
+            <p>Loading your applications…</p>
+          </div>
+        </div>
+        <div class="kanban-board" id="kanbanBoard" hidden></div>
+      </section>
+
+    </main>
+
+    <!-- ── Job Modal ── -->
+    <div class="modal-overlay" id="jobModalOverlay" hidden onclick="closeJobModal(event)">
+      <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+
+        <!-- Accent bar -->
+        <div class="modal-accent-bar"></div>
+
+        <div class="modal-header modal-job-header">
+          <div class="modal-title-group">
+            <div class="modal-job-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18">
+                <rect x="2" y="7" width="20" height="14" rx="2"/>
+                <path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/>
+              </svg>
+            </div>
+            <div>
+              <h2 id="modalTitle">Add Job Application</h2>
+              <p class="modal-subtitle" id="modalSubtitle">Track a new opportunity in your pipeline</p>
+            </div>
+          </div>
+          <button class="modal-close" onclick="closeJobModal()" aria-label="Close">&times;</button>
+        </div>
+
+        <div class="alert" id="modalAlert" role="alert" aria-live="polite"></div>
+
+        <form id="jobForm" novalidate>
+          <input type="hidden" id="jobId" />
+
+          <div class="form-row">
+            <div class="form-group">
+              <label for="companyName">Company Name *</label>
+              <input type="text" id="companyName" placeholder="e.g. Google" required />
+              <span class="field-error" id="companyNameError"></span>
+            </div>
+            <div class="form-group">
+              <label for="jobTitle">Job Title *</label>
+              <input type="text" id="jobTitle" placeholder="e.g. Frontend Developer" required />
+              <span class="field-error" id="jobTitleError"></span>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label>Status</label>
+            <div class="status-picker" id="statusPicker">
+              <button type="button" class="status-pill pill-applied active" data-value="Applied">Applied</button>
+              <button type="button" class="status-pill pill-interview" data-value="Interview">Interview</button>
+              <button type="button" class="status-pill pill-offer" data-value="Offer">Offer</button>
+              <button type="button" class="status-pill pill-rejected" data-value="Rejected">Rejected</button>
+            </div>
+            <input type="hidden" id="jobStatus" value="Applied" />
+          </div>
+
+          <div class="form-group">
+            <label for="dateApplied">Date Applied *</label>
+            <input type="date" id="dateApplied" required />
+            <span class="field-error" id="dateAppliedError"></span>
+          </div>
+
+          <div class="form-group">
+            <label for="notes">Notes <span class="optional">(optional)</span></label>
+            <textarea id="notes" placeholder="Interview round, recruiter name, salary range…" rows="3"></textarea>
+          </div>
+
+          <div class="modal-footer">
+            <button type="button" class="btn btn-ghost" onclick="closeJobModal()">Cancel</button>
+            <button type="submit" class="btn btn-primary" id="jobSubmitBtn">
+              <span class="btn-text">Save Application</span>
+              <span class="btn-spinner" hidden></span>
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- ── Delete Modal ── -->
+    <div class="modal-overlay" id="deleteModalOverlay" hidden onclick="closeDeleteModal(event)">
+      <div class="modal modal-sm" role="dialog" aria-modal="true" aria-labelledby="deleteModalTitle">
+        <div class="modal-header">
+          <h2 id="deleteModalTitle">Delete Application</h2>
+          <button class="modal-close" onclick="closeDeleteModal()" aria-label="Close">&times;</button>
+        </div>
+        <p class="delete-message">
+          Are you sure you want to delete <strong id="deleteJobName"></strong>? This cannot be undone.
+        </p>
+        <div class="modal-footer">
+          <button class="btn btn-ghost" onclick="closeDeleteModal()">Cancel</button>
+          <button class="btn btn-danger" id="confirmDeleteBtn" onclick="confirmDelete()">
+            <span class="btn-text">Delete</span>
+            <span class="btn-spinner" hidden></span>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── AI Advisor ── -->
+    <div class="modal-overlay" id="aiModalOverlay" hidden onclick="closeAI(event)">
+      <div class="modal modal-ai" role="dialog" aria-modal="true" aria-labelledby="aiModalTitle">
+        <div class="modal-header">
+          <div class="ai-title">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20">
+              <path d="M12 2a10 10 0 1 0 10 10A10 10 0 0 0 12 2zm0 18a8 8 0 1 1 8-8 8 8 0 0 1-8 8z"/>
+              <path d="M12 6v6l4 2"/>
+            </svg>
+            <h2 id="aiModalTitle">AI Career Advisor</h2>
+          </div>
+          <button class="modal-close" onclick="closeAI()" aria-label="Close">&times;</button>
+        </div>
+        <p class="ai-subtitle">Ask for personalized advice based on your application stats.</p>
+        <div class="ai-messages" id="aiMessages">
+          <div class="ai-message ai-message--bot">
+            <div class="ai-bubble">
+              Hi! I'm your JobTrace AI advisor. I can see your application stats and give you personalized career advice. What would you like help with?
+            </div>
+          </div>
+        </div>
+        <div class="ai-suggestions">
+          <button class="suggestion-chip" onclick="sendSuggestion(this)">How's my progress?</button>
+          <button class="suggestion-chip" onclick="sendSuggestion(this)">Tips to get more interviews</button>
+          <button class="suggestion-chip" onclick="sendSuggestion(this)">How to handle rejections?</button>
+        </div>
+        <form class="ai-input-row" id="aiForm" onsubmit="sendAIMessage(event)">
+          <input type="text" id="aiInput" placeholder="Ask anything about your job search…" autocomplete="off"/>
+          <button type="submit" class="btn btn-primary" id="aiSendBtn">
+            <span class="btn-text">Send</span>
+            <span class="btn-spinner" hidden></span>
+          </button>
+        </form>
+      </div>
+    </div>
+
+    <!-- Toast -->
+    <div id="toastContainer" class="toast-container"></div>
+
+    <script src="js/api.js"></script>
+    <script src="js/app.js"></script>
+  </body>
+</html>
