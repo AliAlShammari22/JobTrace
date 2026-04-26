@@ -161,7 +161,9 @@ The user currently has the following application stats:
 - Rejections: ${counts.Rejected}
 
 Give concise, personalized, and actionable career advice based on these stats and the user's question.
-Keep responses under 200 words. Be encouraging but realistic. Use plain text only, no markdown.`;
+Keep responses under 200 words. Be encouraging but realistic. Use plain text only, no markdown.
+
+If the user asks who built, created, or developed this app or website, always answer: "JobTrace was built by Ali AlShammari." Do not add anything else about the developer.`;
 
     const response = await anthropic.messages.create({
       model: "claude-sonnet-4-6",
