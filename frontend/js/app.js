@@ -51,6 +51,8 @@ const hour = new Date().getHours();
   showQuote();
   loadStats();
   loadJobs();
+  loadHeatmap();
+  maybeStartTour();
   document.getElementById("dateApplied").valueAsDate = new Date();
 });
 
@@ -254,7 +256,7 @@ function createJobCard(job) {
           </div>
         </div>
         <div class="card-top-right">
-          <span class="badge badge-${job.status.toLowerCase()}">${job.status}</span>
+          <button class="badge badge-${job.status.toLowerCase()} badge-clickable" onclick="cycleStatus(this,'${job._id}')" title="Click to change status">${job.status}</button>
           <div class="job-card-actions">
             <button class="icon-btn" onclick="openJobModal('${job._id}')" aria-label="Edit">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -422,7 +424,7 @@ document.getElementById("jobForm").addEventListener("submit", async (e) => {
 
     document.getElementById("jobModalOverlay").hidden = true;
     clearJobForm();
-    await Promise.all([loadJobs(), loadStats()]);
+    await Promise.all([loadJobs(), loadStats(), loadHeatmap()]);
   } catch (err) {
     showAlert("modalAlert", err.message);
   } finally {
@@ -482,7 +484,7 @@ async function confirmDelete() {
         jobToDeleteId = null;
         setTimeout(async () => {
           ref.remove();
-          await Promise.all([loadJobs(), loadStats()]);
+          await Promise.all([loadJobs(), loadStats(), loadHeatmap()]);
         }, 560);
       });
     } else {
@@ -700,6 +702,205 @@ function copyAIMessage(btn, text) {
       btn.classList.remove("ai-copy-btn--done");
     }, 1500);
   });
+}
+
+// ════════════════════════════════════════
+// STATUS QUICK-CHANGE
+// ════════════════════════════════════════
+const STATUS_CYCLE = ["Applied", "Interview", "Offer", "Rejected"];
+
+async function cycleStatus(btn, id) {
+  if (btn.disabled) return;
+  const current = STATUS_CYCLE.find((s) => btn.classList.contains(`badge-${s.toLowerCase()}`));
+  if (!current) return;
+  const next = STATUS_CYCLE[(STATUS_CYCLE.indexOf(current) + 1) % STATUS_CYCLE.length];
+  const card = btn.closest(".job-card");
+
+  btn.disabled = true;
+  btn.textContent = "…";
+
+  try {
+    await Jobs.update(id, { status: next });
+    btn.className   = `badge badge-${next.toLowerCase()} badge-clickable`;
+    btn.textContent = next;
+    STATUS_CYCLE.forEach((s) => card.classList.remove(`status-${s.toLowerCase()}`));
+    card.classList.add(`status-${next.toLowerCase()}`);
+    loadStats();
+  } catch {
+    btn.className   = `badge badge-${current.toLowerCase()} badge-clickable`;
+    btn.textContent = current;
+    showToast("Failed to update status", "error");
+  } finally {
+    btn.disabled = false;
+  }
+}
+
+// ════════════════════════════════════════
+// ACTIVITY HEATMAP
+// ════════════════════════════════════════
+async function loadHeatmap() {
+  try {
+    const { jobs } = await Jobs.getAll({ status: "All", search: "", sort: "newest" });
+    renderHeatmap(jobs);
+  } catch { /* silent */ }
+}
+
+function renderHeatmap(jobs) {
+  const section = document.getElementById("heatmapSection");
+  if (!jobs.length) { section.hidden = true; return; }
+  section.hidden = false;
+
+  const counts = {};
+  jobs.forEach((j) => {
+    const d = j.dateApplied.substring(0, 10);
+    counts[d] = (counts[d] || 0) + 1;
+  });
+
+  const WEEKS = 16;
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  const start = new Date(today);
+  start.setDate(today.getDate() - WEEKS * 7 + 1);
+  const dow = start.getDay();
+  start.setDate(start.getDate() - (dow === 0 ? 6 : dow - 1));
+
+  const grid     = document.getElementById("heatmapGrid");
+  const monthsEl = document.getElementById("heatmapMonths");
+  grid.innerHTML = monthsEl.innerHTML = "";
+
+  let totalInRange = 0;
+  const monthLabels = [];
+  let lastMonth = -1;
+
+  for (let w = 0; w < WEEKS; w++) {
+    const col = document.createElement("div");
+    col.className = "hm-col";
+
+    for (let d = 0; d < 7; d++) {
+      const date = new Date(start);
+      date.setDate(start.getDate() + w * 7 + d);
+      const cell = document.createElement("div");
+
+      if (date > today) {
+        cell.className = "hm-cell level-future";
+        col.appendChild(cell);
+        continue;
+      }
+
+      const ds    = date.toISOString().substring(0, 10);
+      const count = counts[ds] || 0;
+      totalInRange += count;
+
+      const level = count === 0 ? 0 : count === 1 ? 1 : count === 2 ? 2 : count <= 4 ? 3 : 4;
+      cell.className = `hm-cell level-${level}`;
+      cell.title = count > 0
+        ? `${count} application${count > 1 ? "s" : ""} — ${date.toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })}`
+        : date.toLocaleDateString("en-GB", { day: "numeric", month: "short" });
+
+      if (d === 0) {
+        const m = date.getMonth();
+        if (m !== lastMonth) {
+          monthLabels.push({ col: w, name: date.toLocaleDateString("en-GB", { month: "short" }) });
+          lastMonth = m;
+        }
+      }
+      col.appendChild(cell);
+    }
+    grid.appendChild(col);
+  }
+
+  monthLabels.forEach(({ col, name }) => {
+    const label = document.createElement("span");
+    label.className = "hm-month-label";
+    label.textContent = name;
+    label.style.gridColumn = `${col + 1}`;
+    monthsEl.appendChild(label);
+  });
+
+  const sub = document.getElementById("heatmapSub");
+  if (sub) sub.textContent = `${totalInRange} application${totalInRange !== 1 ? "s" : ""} in the last ${WEEKS} weeks`;
+}
+
+// ════════════════════════════════════════
+// ONBOARDING TOUR
+// ════════════════════════════════════════
+const TOUR_KEY = "jobtrace_onboarded";
+const TOUR_STEPS = [
+  {
+    target: "addJobBtn",
+    title: "Track a New Job",
+    text: "Click here to add an application — company, role, date, status and personal notes.",
+  },
+  {
+    target: "statsGrid",
+    title: "Your Progress at a Glance",
+    text: "Stats update live as you add and update applications. Watch your pipeline fill up!",
+  },
+  {
+    target: "aiAdvisorBtn",
+    title: "AI Career Advisor",
+    text: "Get personalised, data-driven tips from Claude AI based on your real application stats.",
+  },
+];
+
+let tourStep = 0;
+
+function maybeStartTour() {
+  if (!localStorage.getItem(TOUR_KEY)) setTimeout(startTour, 900);
+}
+
+function startTour() {
+  tourStep = 0;
+  document.getElementById("tourOverlay").hidden = false;
+  showTourStep(0);
+}
+
+function showTourStep(n) {
+  const step   = TOUR_STEPS[n];
+  const target = document.getElementById(step.target);
+  if (!target) { endTour(); return; }
+
+  document.querySelectorAll(".tour-highlight").forEach((el) => el.classList.remove("tour-highlight"));
+  target.classList.add("tour-highlight");
+  target.scrollIntoView({ behavior: "smooth", block: "center" });
+
+  document.getElementById("tourTitle").textContent   = step.title;
+  document.getElementById("tourText").textContent    = step.text;
+  document.getElementById("tourStepNum").textContent = `${n + 1} / ${TOUR_STEPS.length}`;
+  document.getElementById("tourPrevBtn").hidden      = n === 0;
+  document.getElementById("tourNextBtn").textContent = n === TOUR_STEPS.length - 1 ? "Got it! 🎉" : "Next →";
+
+  const tooltip = document.getElementById("tourTooltip");
+  tooltip.hidden = false;
+
+  requestAnimationFrame(() => {
+    const rect   = target.getBoundingClientRect();
+    const tw     = tooltip.offsetWidth  || 280;
+    const th     = tooltip.offsetHeight || 160;
+    const MARGIN = 14;
+    let top  = rect.bottom + MARGIN;
+    let left = rect.left;
+    if (top + th > window.innerHeight - MARGIN) top = rect.top - th - MARGIN;
+    left = Math.max(MARGIN, Math.min(left, window.innerWidth - tw - MARGIN));
+    tooltip.style.top  = `${Math.max(MARGIN, top)}px`;
+    tooltip.style.left = `${left}px`;
+  });
+}
+
+function tourNext() {
+  tourStep < TOUR_STEPS.length - 1 ? showTourStep(++tourStep) : endTour();
+}
+
+function tourPrev() {
+  if (tourStep > 0) showTourStep(--tourStep);
+}
+
+function endTour() {
+  localStorage.setItem(TOUR_KEY, "1");
+  document.getElementById("tourOverlay").hidden  = true;
+  document.getElementById("tourTooltip").hidden  = true;
+  document.querySelectorAll(".tour-highlight").forEach((el) => el.classList.remove("tour-highlight"));
 }
 
 // ════════════════════════════════════════
