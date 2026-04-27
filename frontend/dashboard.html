@@ -32,7 +32,7 @@
             </svg>
             AI Advisor
           </button>
-          <button class="btn btn-primary btn-sm" id="addJobBtn" onclick="openJobModal()">+ Add Job</button>
+          <button class="btn btn-primary btn-sm" id="addJobBtn" onclick="openJobModal()" title="Add Job (N)">+ Add Job</button>
           <button class="btn btn-ghost btn-sm" onclick="logout()">Sign Out</button>
         </div>
       </div>
@@ -125,6 +125,18 @@
         <div class="streak-badge" id="streakBadge" hidden></div>
       </div>
 
+      <!-- Milestone Badges -->
+      <div class="milestone-shelf" id="milestoneShelf" hidden>
+        <span class="milestone-shelf-title">Achievements</span>
+        <div class="milestone-items" id="milestoneItems"></div>
+      </div>
+
+      <!-- Conversion Funnel -->
+      <section class="funnel-card" id="funnelSection" hidden>
+        <p class="funnel-title">Pipeline Conversion</p>
+        <div class="funnel-stages" id="funnelStages"></div>
+      </section>
+
       <!-- Activity Heatmap -->
       <section class="heatmap-section" id="heatmapSection" hidden>
         <div class="heatmap-header">
@@ -161,7 +173,7 @@
             <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/>
             </svg>
-            <input type="search" id="searchInput" placeholder="Search company or job title…" autocomplete="off"/>
+            <input type="search" id="searchInput" placeholder="Search company or job title… ( / )" autocomplete="off"/>
           </div>
           <select id="statusFilter" class="select-input">
             <option value="All">All Statuses</option>

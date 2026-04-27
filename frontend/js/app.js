@@ -54,6 +54,17 @@ const hour = new Date().getHours();
   loadHeatmap();
   maybeStartTour();
   document.getElementById("dateApplied").valueAsDate = new Date();
+
+  // 3D tilt on stat cards
+  document.querySelectorAll(".stat-card").forEach((card) => {
+    card.addEventListener("mousemove", (e) => {
+      const r = card.getBoundingClientRect();
+      const x = (e.clientX - r.left) / r.width  - 0.5;
+      const y = (e.clientY - r.top)  / r.height - 0.5;
+      card.style.transform = `perspective(500px) rotateY(${x * 12}deg) rotateX(${-y * 12}deg) translateY(-3px)`;
+    });
+    card.addEventListener("mouseleave", () => { card.style.transform = ""; });
+  });
 });
 
 // ════════════════════════════════════════
@@ -69,9 +80,81 @@ async function loadStats() {
     animateCounter(document.getElementById("statOffer"),     stats.Offer);
     animateCounter(document.getElementById("statRejected"),  stats.Rejected);
     updateSuggestionChips(stats);
+    renderFunnel(stats);
+    checkMilestones(stats);
   } catch {
     // silent
   }
+}
+
+// ── Milestone badges ──
+const MILESTONES = [
+  { id: "first_app",   icon: "🎯", label: "First Step",       check: (s) => s.total >= 1 },
+  { id: "five_apps",   icon: "🚀", label: "Getting Started",  check: (s) => s.total >= 5 },
+  { id: "ten_apps",    icon: "💼", label: "In Full Swing",    check: (s) => s.total >= 10 },
+  { id: "twenty_apps", icon: "📬", label: "Committed",        check: (s) => s.total >= 20 },
+  { id: "first_int",   icon: "🗣️", label: "First Interview",  check: (s) => (s.Interview + s.Offer) >= 1 },
+  { id: "multi_int",   icon: "🎤", label: "Hot Candidate",    check: (s) => (s.Interview + s.Offer) >= 5 },
+  { id: "first_offer", icon: "🏆", label: "Offer Received",   check: (s) => s.Offer >= 1 },
+  { id: "resilient",   icon: "💪", label: "Resilient",        check: (s) => s.Rejected >= 5 },
+];
+
+function checkMilestones(stats) {
+  const shelf = document.getElementById("milestoneShelf");
+  const earned = MILESTONES.filter((m) => m.check(stats));
+  if (!earned.length) { shelf.hidden = true; return; }
+  shelf.hidden = false;
+
+  const prev = JSON.parse(localStorage.getItem("jobtrace_milestones") || "[]");
+  earned.filter((m) => !prev.includes(m.id))
+        .forEach((m) => showToast(`${m.icon} Badge unlocked: ${m.label}!`, "success"));
+  localStorage.setItem("jobtrace_milestones", JSON.stringify(earned.map((m) => m.id)));
+
+  document.getElementById("milestoneItems").innerHTML = earned.map((m) => `
+    <div class="milestone-badge" title="${m.label}">
+      <span class="ms-icon">${m.icon}</span>
+      <span class="ms-label">${m.label}</span>
+    </div>`).join("");
+}
+
+function renderFunnel(stats) {
+  const section = document.getElementById("funnelSection");
+  if (!section || !stats.total) { if (section) section.hidden = true; return; }
+  section.hidden = false;
+
+  const interviewed   = stats.Interview + stats.Offer;
+  const toInterview   = Math.round((interviewed   / stats.total)   * 100);
+  const toOffer       = interviewed > 0 ? Math.round((stats.Offer / interviewed) * 100) : 0;
+
+  const rateColor = (pct) => pct >= 30 ? "#22c55e" : pct >= 10 ? "#f59e0b" : "#ef4444";
+
+  document.getElementById("funnelStages").innerHTML = `
+    <div class="funnel-node">
+      <div class="funnel-node-num" style="color:#3b82f6">${stats.total}</div>
+      <div class="funnel-node-name">Total Applied</div>
+    </div>
+    <div class="funnel-connector">
+      <span class="funnel-rate" style="color:${rateColor(toInterview)}">${toInterview}%</span>
+      <svg class="funnel-arrow-svg" viewBox="0 0 32 10" fill="none">
+        <path d="M0 5 H26 M22 1 L30 5 L22 9" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+      <span class="funnel-rate-label">interview rate</span>
+    </div>
+    <div class="funnel-node">
+      <div class="funnel-node-num" style="color:#f59e0b">${interviewed}</div>
+      <div class="funnel-node-name">Interviews</div>
+    </div>
+    <div class="funnel-connector">
+      <span class="funnel-rate" style="color:${rateColor(toOffer)}">${toOffer}%</span>
+      <svg class="funnel-arrow-svg" viewBox="0 0 32 10" fill="none">
+        <path d="M0 5 H26 M22 1 L30 5 L22 9" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+      <span class="funnel-rate-label">offer rate</span>
+    </div>
+    <div class="funnel-node">
+      <div class="funnel-node-num" style="color:#22c55e">${stats.Offer}</div>
+      <div class="funnel-node-name">Offers 🎉</div>
+    </div>`;
 }
 
 function animateCounter(el, target, duration = 900) {
@@ -110,15 +193,16 @@ async function loadJobs() {
   const loading = document.getElementById("loadingState");
   const board   = document.getElementById("kanbanBoard");
 
-  list.hidden  = false;
-  board.hidden = true;
-  loading.hidden = false;
+  list.hidden    = false;
+  board.hidden   = true;
+  loading.hidden = true;
   empty.hidden   = true;
-  list.querySelectorAll(".job-card").forEach((el) => el.remove());
+  list.querySelectorAll(".job-card, .skeleton-card").forEach((el) => el.remove());
+  if (currentView === "list") showSkeletons(list, 4);
 
   try {
     const { jobs } = await Jobs.getAll(getFilters());
-    loading.hidden = true;
+    list.querySelectorAll(".skeleton-card").forEach((el) => el.remove());
 
     if (jobs.length === 0) {
       const { status, search } = getFilters();
@@ -151,8 +235,30 @@ async function loadJobs() {
     const badge = document.getElementById("jobsCount");
     if (badge) badge.textContent = jobs.length;
   } catch (err) {
-    loading.hidden = true;
+    list.querySelectorAll(".skeleton-card").forEach((el) => el.remove());
     showToast(err.message, "error");
+  }
+}
+
+function showSkeletons(container, count = 4) {
+  for (let i = 0; i < count; i++) {
+    const sk = document.createElement("div");
+    sk.className = "skeleton-card";
+    sk.innerHTML = `
+      <div class="sk-accent"></div>
+      <div class="sk-body">
+        <div class="sk-header">
+          <div class="sk-avatar shimmer"></div>
+          <div class="sk-titles">
+            <div class="sk-line sk-company shimmer"></div>
+            <div class="sk-line sk-role shimmer"></div>
+          </div>
+          <div class="sk-badge shimmer"></div>
+        </div>
+        <div class="sk-meta shimmer"></div>
+        <div class="sk-pipeline shimmer"></div>
+      </div>`;
+    container.appendChild(sk);
   }
 }
 
@@ -235,21 +341,36 @@ function avatarColor(name) {
   return AVATAR_COLORS[Math.abs(h) % AVATAR_COLORS.length];
 }
 
+function guessDomain(name) {
+  return name.toLowerCase().replace(/[^a-z0-9]/g, "").split(/\s+/)[0] + ".com";
+}
+
 function createJobCard(job) {
   const card = document.createElement("div");
   card.className = `job-card status-${job.status.toLowerCase()}`;
   card.dataset.id = job._id;
 
-  const date = new Date(job.dateApplied).toLocaleDateString("en-GB", {
+  const date     = new Date(job.dateApplied).toLocaleDateString("en-GB", {
     day: "numeric", month: "short", year: "numeric",
   });
   const notesText = job.notes ? escapeHTML(job.notes) : "";
+  const domain    = guessDomain(job.companyName);
+  const initial   = job.companyName.charAt(0).toUpperCase();
+  const color     = avatarColor(job.companyName);
 
   card.innerHTML = `
     <div class="card-accent"></div>
     <div class="card-body">
       <div class="card-header">
         <div class="company-info">
+          <div class="company-avatar" style="background:${color}">
+            <span class="avatar-initial">${initial}</span>
+            <img class="avatar-favicon"
+                 src="https://logo.clearbit.com/${domain}"
+                 alt=""
+                 onload="this.classList.add('loaded')"
+                 onerror="this.src='https://www.google.com/s2/favicons?sz=64&domain=${domain}'">
+          </div>
           <div class="card-titles">
             <div class="job-company">${escapeHTML(job.companyName)}</div>
             <div class="job-title">${escapeHTML(job.jobTitle)}</div>
@@ -301,10 +422,10 @@ function createJobCard(job) {
       </div>
       ${buildPipeline(job.status)}
       <div class="card-notes-expanded" aria-hidden="true">
-        <div class="card-notes-inner">
+        <div class="card-notes-inner" title="Click to edit note">
           ${notesText
             ? `<p class="card-notes-text">${notesText}</p>`
-            : `<p class="card-notes-empty">No notes added yet. Click edit to add some.</p>`
+            : `<p class="card-notes-empty">No notes yet — click to add one.</p>`
           }
         </div>
       </div>
@@ -318,7 +439,60 @@ function createJobCard(job) {
     card.querySelector(".notes-toggle").setAttribute("aria-expanded", String(expanded));
   });
 
+  // Inline note editing
+  let liveNotes = job.notes || "";
+  card.querySelector(".card-notes-inner").addEventListener("click", () => {
+    startInlineNoteEdit(card.querySelector(".card-notes-inner"), job._id, liveNotes, (saved) => {
+      liveNotes = saved;
+    });
+  });
+
   return card;
+}
+
+function startInlineNoteEdit(inner, id, currentNotes, onSave) {
+  if (inner.querySelector("textarea")) return;
+  inner.classList.add("notes-editing");
+
+  const ta = document.createElement("textarea");
+  ta.className     = "notes-inline-editor";
+  ta.value         = currentNotes;
+  ta.placeholder   = "Add your notes here…";
+  ta.rows          = 3;
+  inner.innerHTML  = "";
+  inner.appendChild(ta);
+  ta.focus();
+  ta.setSelectionRange(ta.value.length, ta.value.length);
+
+  async function commit() {
+    const newNotes = ta.value.trim();
+    inner.classList.remove("notes-editing");
+    inner.innerHTML = newNotes
+      ? `<p class="card-notes-text">${escapeHTML(newNotes)}</p>`
+      : `<p class="card-notes-empty">No notes yet — click to add one.</p>`;
+
+    if (newNotes !== currentNotes) {
+      try {
+        await Jobs.update(id, { notes: newNotes });
+        onSave(newNotes);
+        currentNotes = newNotes;
+        showToast("Note saved ✓", "success");
+      } catch {
+        showToast("Failed to save note", "error");
+        inner.innerHTML = currentNotes
+          ? `<p class="card-notes-text">${escapeHTML(currentNotes)}</p>`
+          : `<p class="card-notes-empty">No notes yet — click to add one.</p>`;
+      }
+    }
+
+    inner.addEventListener("click", () =>
+      startInlineNoteEdit(inner, id, currentNotes, onSave), { once: true });
+  }
+
+  ta.addEventListener("blur", commit);
+  ta.addEventListener("keydown", (e) => {
+    if (e.key === "Escape") { ta.value = currentNotes; ta.blur(); }
+  });
 }
 
 // ── Search / filter / sort ──
@@ -460,46 +634,78 @@ function closeDeleteModal(event) {
   jobToDeleteId = null;
 }
 
-async function confirmDelete() {
+function confirmDelete() {
   if (!jobToDeleteId) return;
-  const btn     = document.getElementById("confirmDeleteBtn");
-  const text    = btn.querySelector(".btn-text");
-  const spinner = btn.querySelector(".btn-spinner");
-  btn.disabled  = true;
-  text.hidden   = true;
-  spinner.hidden = false;
 
-  try {
-    await Jobs.delete(jobToDeleteId);
-    document.getElementById("deleteModalOverlay").hidden = true;
-    showToast("Application deleted.", "success");
+  const id   = jobToDeleteId;
+  const card = cardToDelete;
+  jobToDeleteId = null;
+  cardToDelete  = null;
 
-    if (cardToDelete) {
-      cardToDelete.style.maxHeight = cardToDelete.offsetHeight + "px";
-      cardToDelete.style.overflow  = "hidden";
-      requestAnimationFrame(() => {
-        cardToDelete.classList.add("card-deleting");
-        const ref = cardToDelete;
-        cardToDelete  = null;
-        jobToDeleteId = null;
-        setTimeout(async () => {
-          ref.remove();
-          await Promise.all([loadJobs(), loadStats(), loadHeatmap()]);
-        }, 560);
-      });
-    } else {
-      jobToDeleteId = null;
-      cardToDelete  = null;
-      await Promise.all([loadJobs(), loadStats()]);
-    }
-  } catch (err) {
-    showToast(err.message, "error");
-    document.getElementById("deleteModalOverlay").hidden = true;
-  } finally {
-    btn.disabled   = false;
-    text.hidden    = false;
-    spinner.hidden = true;
+  document.getElementById("deleteModalOverlay").hidden = true;
+
+  // Animate card out immediately — no API call yet
+  if (card) {
+    card.style.maxHeight = card.offsetHeight + "px";
+    card.style.overflow  = "hidden";
+    requestAnimationFrame(() => card.classList.add("card-deleting"));
   }
+
+  // Commit the delete after the undo window
+  const deleteTimer = setTimeout(async () => {
+    if (card) card.remove();
+    try {
+      await Jobs.delete(id);
+      await Promise.all([loadJobs(), loadStats(), loadHeatmap()]);
+    } catch {
+      showToast("Couldn't delete — please try again.", "error");
+      await loadJobs();
+    }
+  }, 5000);
+
+  // Undo toast — cancels the timer and reverses the animation
+  showUndoToast("Application deleted.", () => {
+    clearTimeout(deleteTimer);
+    if (card) {
+      card.classList.remove("card-deleting");
+      setTimeout(() => {
+        card.style.maxHeight = "";
+        card.style.overflow  = "";
+      }, 600);
+    }
+  });
+}
+
+function showUndoToast(message, onUndo) {
+  const DURATION  = 5000;
+  const container = document.getElementById("toastContainer");
+  const toast     = document.createElement("div");
+  toast.className = "toast toast-success toast-undo show";
+  toast.innerHTML = `
+    <span class="toast-icon">✓</span>
+    <span class="toast-undo-msg">${escapeHTML(message)}</span>
+    <button class="toast-undo-btn">Undo</button>
+    <div class="toast-undo-bar"></div>`;
+  container.appendChild(toast);
+
+  const bar = toast.querySelector(".toast-undo-bar");
+  requestAnimationFrame(() => requestAnimationFrame(() => {
+    bar.style.transitionDuration = `${DURATION}ms`;
+    bar.style.transform = "scaleX(0)";
+  }));
+
+  function dismiss() {
+    toast.classList.remove("show");
+    toast.addEventListener("transitionend", () => toast.remove(), { once: true });
+  }
+
+  const autoTimer = setTimeout(dismiss, DURATION);
+
+  toast.querySelector(".toast-undo-btn").addEventListener("click", () => {
+    clearTimeout(autoTimer);
+    dismiss();
+    onUndo();
+  });
 }
 
 // ════════════════════════════════════════
@@ -725,6 +931,7 @@ async function cycleStatus(btn, id) {
     btn.textContent = next;
     STATUS_CYCLE.forEach((s) => card.classList.remove(`status-${s.toLowerCase()}`));
     card.classList.add(`status-${next.toLowerCase()}`);
+    if (next === "Offer") launchConfetti();
     loadStats();
   } catch {
     btn.className   = `badge badge-${current.toLowerCase()} badge-clickable`;
@@ -973,6 +1180,27 @@ function launchConfetti() {
   frame = requestAnimationFrame(animate);
   setTimeout(() => { cancelAnimationFrame(frame); canvas.remove(); }, 4500);
 }
+
+// ════════════════════════════════════════
+// KEYBOARD SHORTCUTS
+// ════════════════════════════════════════
+document.addEventListener("keydown", (e) => {
+  const tag     = document.activeElement?.tagName;
+  const inInput = tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT";
+
+  if (e.key === "Escape") {
+    if (!document.getElementById("jobModalOverlay").hidden)    { closeJobModal();    return; }
+    if (!document.getElementById("deleteModalOverlay").hidden) { closeDeleteModal(); return; }
+    if (!document.getElementById("aiModalOverlay").hidden)     { closeAI();          return; }
+    if (!document.getElementById("tourOverlay").hidden)        { endTour();          return; }
+    return;
+  }
+
+  if (inInput) return;
+
+  if      (e.key === "n" || e.key === "N") { e.preventDefault(); openJobModal(); }
+  else if (e.key === "/")                  { e.preventDefault(); document.getElementById("searchInput").focus(); }
+});
 
 // ════════════════════════════════════════
 // LOGOUT

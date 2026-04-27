@@ -1285,14 +1285,79 @@ input.input-error, textarea.input-error { border-color: var(--danger); }
   box-shadow: var(--shadow-lg);
   opacity: 0; transform: translateY(12px);
   transition: opacity .25s ease, transform .25s ease;
-  pointer-events: auto; max-width: 320px;
+  pointer-events: auto; max-width: 340px;
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
+  position: relative; overflow: hidden;
 }
 .toast.show { opacity: 1; transform: translateY(0); }
 .toast-success { background: rgba(240,253,244,.95); color: #15803d; border: 1px solid #bbf7d0; }
 .toast-error   { background: rgba(254,242,242,.95); color: #b91c1c; border: 1px solid #fecaca; }
 .toast-icon { font-size: 1rem; font-weight: 700; flex-shrink: 0; }
+
+/* Undo toast */
+.toast-undo { padding-bottom: 20px; align-items: center; }
+.toast-undo-msg { flex: 1; }
+.toast-undo-btn {
+  flex-shrink: 0; cursor: pointer;
+  padding: 3px 11px; border-radius: 5px;
+  border: 1px solid #a7f3d0;
+  background: rgba(16,185,129,.12);
+  color: #059669; font-size: .78rem; font-weight: 700;
+  transition: background .12s;
+}
+.toast-undo-btn:hover { background: rgba(16,185,129,.25); }
+.toast-undo-bar {
+  position: absolute; bottom: 0; left: 0; right: 0; height: 3px;
+  background: #86efac;
+  transform: scaleX(1); transform-origin: left;
+  transition: transform linear;
+  border-radius: 0 0 var(--radius-md) var(--radius-md);
+}
+
+/* ════════════════════════════════════════
+   CONVERSION FUNNEL
+════════════════════════════════════════ */
+.funnel-card {
+  background: var(--surface);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  border: 1px solid rgba(255,255,255,.68);
+  border-radius: var(--radius-md);
+  padding: 16px 24px 20px;
+  box-shadow: var(--shadow-sm);
+}
+.funnel-title {
+  font-size: .82rem; font-weight: 600; color: var(--text-muted);
+  text-transform: uppercase; letter-spacing: .05em;
+  margin: 0 0 16px;
+}
+.funnel-stages {
+  display: flex; align-items: center; gap: 0;
+}
+.funnel-node {
+  flex: 1; text-align: center;
+}
+.funnel-node-num {
+  font-size: 2rem; font-weight: 800; line-height: 1;
+}
+.funnel-node-name {
+  font-size: .72rem; color: var(--text-muted); margin-top: 5px; font-weight: 500;
+}
+.funnel-connector {
+  display: flex; flex-direction: column; align-items: center;
+  gap: 3px; padding: 0 10px; flex-shrink: 0;
+}
+.funnel-rate {
+  font-size: .9rem; font-weight: 700; line-height: 1;
+}
+.funnel-arrow-svg {
+  width: 32px; height: 10px; color: #d1d5db; flex-shrink: 0;
+}
+.funnel-rate-label {
+  font-size: .6rem; color: var(--text-muted);
+  white-space: nowrap; text-align: center;
+}
 
 /* ════════════════════════════════════════
    VIEW TOGGLE
@@ -1462,6 +1527,237 @@ input.input-error, textarea.input-error { border-color: var(--danger); }
   .heatmap-section { padding: 16px 16px 12px; }
 }
 
+/* ═══════════════════════════════════════════
+   COMPANY AVATAR (favicon + initial fallback)
+   ═══════════════════════════════════════════ */
+.company-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  flex-shrink: 0;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.avatar-initial {
+  font-size: .9rem;
+  font-weight: 700;
+  color: #fff;
+  line-height: 1;
+  position: absolute;
+  z-index: 1;
+  transition: opacity .2s;
+}
+
+.avatar-favicon {
+  width: 26px;
+  height: 26px;
+  object-fit: contain;
+  border-radius: 4px;
+  opacity: 0;
+  position: absolute;
+  z-index: 2;
+  transition: opacity .25s;
+}
+
+.avatar-favicon.loaded {
+  opacity: 1;
+}
+
+/* Hide initial once favicon loads */
+.company-avatar:has(.avatar-favicon.loaded) .avatar-initial {
+  opacity: 0;
+}
+
+/* ═══════════════════════════════════════════
+   SKELETON LOADING CARDS
+   ═══════════════════════════════════════════ */
+@keyframes shimmer {
+  0%   { background-position: -600px 0; }
+  100% { background-position: 600px 0; }
+}
+
+.shimmer {
+  background: linear-gradient(
+    90deg,
+    rgba(226,232,240,.6) 25%,
+    rgba(241,245,249,.9) 50%,
+    rgba(226,232,240,.6) 75%
+  );
+  background-size: 1200px 100%;
+  animation: shimmer 1.6s infinite linear;
+  border-radius: 6px;
+}
+
+.skeleton-card {
+  background: var(--surface);
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.sk-accent {
+  height: 4px;
+  background: linear-gradient(90deg, rgba(226,232,240,.8) 25%, rgba(241,245,249,1) 50%, rgba(226,232,240,.8) 75%);
+  background-size: 1200px 100%;
+  animation: shimmer 1.6s infinite linear;
+}
+
+.sk-body {
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.sk-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.sk-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  flex-shrink: 0;
+}
+
+.sk-titles {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.sk-line {
+  height: 12px;
+  border-radius: 6px;
+}
+
+.sk-company { width: 55%; }
+.sk-role    { width: 75%; height: 10px; opacity: .7; }
+
+.sk-badge {
+  width: 72px;
+  height: 24px;
+  border-radius: 20px;
+  margin-left: auto;
+  align-self: flex-start;
+}
+
+.sk-meta     { height: 10px; width: 40%; border-radius: 6px; }
+.sk-pipeline { height: 10px; width: 100%; border-radius: 6px; }
+
+/* ═══════════════════════════════════════════
+   STAT CARD 3-D TILT
+   ═══════════════════════════════════════════ */
+.stat-card {
+  will-change: transform;
+  transform-style: preserve-3d;
+  transition: transform .15s ease, box-shadow .15s ease;
+}
+
+/* ═══════════════════════════════════════════
+   MILESTONE BADGES SHELF
+   ═══════════════════════════════════════════ */
+.milestone-shelf {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 16px 20px;
+  margin-bottom: 20px;
+}
+
+.milestone-shelf-title {
+  font-size: .7rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: .08em;
+  color: var(--text-muted);
+  margin-bottom: 12px;
+}
+
+.milestone-items {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.milestone-badge {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px 6px 8px;
+  background: linear-gradient(135deg, rgba(234,88,12,.08), rgba(234,88,12,.04));
+  border: 1px solid rgba(234,88,12,.2);
+  border-radius: 20px;
+  animation: badgePop .35s cubic-bezier(.34,1.56,.64,1) both;
+  cursor: default;
+}
+
+@keyframes badgePop {
+  from { transform: scale(0); opacity: 0; }
+  to   { transform: scale(1); opacity: 1; }
+}
+
+.ms-icon {
+  font-size: 1rem;
+  line-height: 1;
+}
+
+.ms-label {
+  font-size: .75rem;
+  font-weight: 600;
+  color: var(--accent);
+}
+
+/* ═══════════════════════════════════════════
+   INLINE NOTE EDITING
+   ═══════════════════════════════════════════ */
+.card-notes-inner {
+  cursor: pointer;
+  transition: background .15s;
+  border-radius: 6px;
+  padding: 2px 4px;
+  margin: -2px -4px;
+}
+
+.card-notes-inner:hover {
+  background: rgba(234,88,12,.06);
+}
+
+.card-notes-inner.notes-editing {
+  cursor: default;
+  background: transparent;
+}
+
+.notes-inline-editor {
+  width: 100%;
+  min-height: 72px;
+  padding: 8px 10px;
+  font-size: .82rem;
+  font-family: inherit;
+  line-height: 1.5;
+  color: var(--text);
+  background: var(--bg);
+  border: 1.5px solid var(--accent);
+  border-radius: 8px;
+  resize: vertical;
+  outline: none;
+  box-sizing: border-box;
+  transition: border-color .15s, box-shadow .15s;
+}
+
+.notes-inline-editor:focus {
+  box-shadow: 0 0 0 3px rgba(234,88,12,.15);
+}
+
 /* ── Mobile (≤480px) ── */
 @media (max-width: 480px) {
   /* Header — hide AI Advisor label, keep icon */
@@ -1537,6 +1833,13 @@ input.input-error, textarea.input-error { border-color: var(--danger); }
 
   /* Kanban — 1 col */
   .kanban-board { grid-template-columns: 1fr; }
+
+  /* Funnel — mobile */
+  .funnel-card { padding: 14px 14px 16px; }
+  .funnel-node-num { font-size: 1.5rem; }
+  .funnel-connector { padding: 0 5px; }
+  .funnel-rate { font-size: .78rem; }
+  .funnel-rate-label { font-size: .55rem; }
 
   /* Heatmap — mobile: smaller cells, hide day labels */
   .heatmap-section { padding: 14px 14px 10px; }
