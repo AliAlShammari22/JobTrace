@@ -814,9 +814,39 @@ input.input-error, textarea.input-error { border-color: var(--danger); }
   font-size: .78rem; color: var(--text-muted);
 }
 .job-date svg { flex-shrink: 0; }
-.job-notes-preview {
-  font-size: .78rem; color: var(--text-muted); font-style: italic;
-  white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 320px;
+/* ── Notes toggle button ── */
+.notes-toggle {
+  display: inline-flex; align-items: center; gap: 5px;
+  padding: 3px 9px; border-radius: 6px; border: 1px solid #e5e7eb;
+  background: #f9fafb; color: var(--text-muted);
+  font-size: .75rem; font-weight: 500; cursor: pointer;
+  transition: background .15s, border-color .15s, color .15s;
+  flex-shrink: 0;
+}
+.notes-toggle:hover { background: #fff7ed; border-color: #fed7aa; color: #ea580c; }
+.notes-toggle .notes-chevron { transition: transform .25s ease; flex-shrink: 0; }
+.job-card.notes-open .notes-toggle { background: #fff7ed; border-color: #fed7aa; color: #ea580c; }
+.job-card.notes-open .notes-chevron { transform: rotate(180deg); }
+
+/* ── Expandable notes panel ── */
+.card-notes-expanded {
+  max-height: 0; overflow: hidden;
+  transition: max-height .3s ease, opacity .25s ease;
+  opacity: 0;
+}
+.job-card.notes-open .card-notes-expanded {
+  max-height: 300px; opacity: 1;
+}
+.card-notes-inner {
+  border-top: 1px solid #f3f4f6; margin-top: 10px; padding-top: 12px;
+  padding-bottom: 4px;
+}
+.card-notes-text {
+  font-size: .83rem; color: var(--text-secondary); line-height: 1.6;
+  white-space: pre-wrap; word-break: break-word; margin: 0;
+}
+.card-notes-empty {
+  font-size: .8rem; color: var(--text-muted); font-style: italic; margin: 0;
 }
 
 /* ── Status Badge ── */
@@ -1220,7 +1250,6 @@ input.input-error, textarea.input-error { border-color: var(--danger); }
   .toolbar-panel .select-input { flex: 1; min-width: 0; }
 
   /* Job cards */
-  .job-notes-preview { max-width: 180px; }
   .card-body { padding: 12px 14px; }
 
   /* Add Job modal — tablet */
@@ -1280,7 +1309,6 @@ input.input-error, textarea.input-error { border-color: var(--danger); }
   .card-header { flex-wrap: wrap; gap: 8px; }
   .card-top-right { width: 100%; justify-content: space-between; }
   .job-pipeline { overflow-x: auto; }
-  .job-notes-preview { max-width: 100%; }
 
   /* Modal — full bottom sheet */
   .modal-header { padding: 16px 16px 0; }

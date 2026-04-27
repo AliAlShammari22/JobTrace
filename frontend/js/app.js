@@ -230,9 +230,11 @@ function createJobCard(job) {
   card.className = `job-card status-${job.status.toLowerCase()}`;
   card.dataset.id = job._id;
 
-  const date    = new Date(job.dateApplied).toLocaleDateString("en-GB", {
+  const date = new Date(job.dateApplied).toLocaleDateString("en-GB", {
     day: "numeric", month: "short", year: "numeric",
   });
+  const notesText = job.notes ? escapeHTML(job.notes) : "";
+
   card.innerHTML = `
     <div class="card-accent"></div>
     <div class="card-body">
@@ -273,11 +275,39 @@ function createJobCard(job) {
           </svg>
           ${date}
         </span>
-        ${job.notes ? `<span class="job-notes-preview">"${escapeHTML(job.notes)}"</span>` : ""}
+        <button class="notes-toggle" aria-label="Toggle notes" aria-expanded="false">
+          <svg class="notes-toggle-icon" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+            <polyline points="14 2 14 8 20 8"/>
+            <line x1="16" y1="13" x2="8" y2="13"/>
+            <line x1="16" y1="17" x2="8" y2="17"/>
+            <polyline points="10 9 9 9 8 9"/>
+          </svg>
+          Notes
+          <svg class="notes-chevron" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <polyline points="6 9 12 15 18 9"/>
+          </svg>
+        </button>
       </div>
       ${buildPipeline(job.status)}
+      <div class="card-notes-expanded" aria-hidden="true">
+        <div class="card-notes-inner">
+          ${notesText
+            ? `<p class="card-notes-text">${notesText}</p>`
+            : `<p class="card-notes-empty">No notes added yet. Click edit to add some.</p>`
+          }
+        </div>
+      </div>
     </div>
   `;
+
+  card.querySelector(".notes-toggle").addEventListener("click", (e) => {
+    e.stopPropagation();
+    const expanded = card.classList.toggle("notes-open");
+    card.querySelector(".card-notes-expanded").setAttribute("aria-hidden", String(!expanded));
+    card.querySelector(".notes-toggle").setAttribute("aria-expanded", String(expanded));
+  });
+
   return card;
 }
 
