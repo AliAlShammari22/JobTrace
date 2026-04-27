@@ -66,6 +66,68 @@ function setLoading(btnId, loading) {
   btn.querySelector(".btn-spinner").hidden = !loading;
 }
 
+// ── Password strength ──
+function updateStrength(password) {
+  const bar   = document.getElementById("passwordStrength");
+  const fill  = document.getElementById("strengthFill");
+  const label = document.getElementById("strengthLabel");
+  if (!password) { bar.hidden = true; return; }
+  bar.hidden = false;
+  let score = 0;
+  if (password.length >= 8)          score++;
+  if (/[A-Z]/.test(password))        score++;
+  if (/[0-9]/.test(password))        score++;
+  if (/[^A-Za-z0-9]/.test(password)) score++;
+  const levels = [
+    { pct: "25%", color: "#ef4444", text: "Weak" },
+    { pct: "50%", color: "#f59e0b", text: "Fair" },
+    { pct: "75%", color: "#3b82f6", text: "Good" },
+    { pct: "100%",color: "#22c55e", text: "Strong" },
+  ];
+  const lvl = levels[Math.min(score, 3)];
+  fill.style.width      = lvl.pct;
+  fill.style.background = lvl.color;
+  label.textContent     = lvl.text;
+  label.style.color     = lvl.color;
+}
+
+// ── Blur validation ──
+document.getElementById("loginEmail").addEventListener("blur", (e) => {
+  const v = e.target.value.trim();
+  if (!v) showFieldError("loginEmailError", "Email is required");
+  else if (!/^\S+@\S+\.\S+$/.test(v)) showFieldError("loginEmailError", "Enter a valid email");
+  else clearFieldError("loginEmailError");
+});
+document.getElementById("loginPassword").addEventListener("blur", (e) => {
+  if (!e.target.value) showFieldError("loginPasswordError", "Password is required");
+  else clearFieldError("loginPasswordError");
+});
+document.getElementById("registerName").addEventListener("blur", (e) => {
+  if (!e.target.value.trim()) showFieldError("registerNameError", "Name is required");
+  else clearFieldError("registerNameError");
+});
+document.getElementById("registerEmail").addEventListener("blur", (e) => {
+  const v = e.target.value.trim();
+  if (!v) showFieldError("registerEmailError", "Email is required");
+  else if (!/^\S+@\S+\.\S+$/.test(v)) showFieldError("registerEmailError", "Enter a valid email");
+  else clearFieldError("registerEmailError");
+});
+document.getElementById("registerPassword").addEventListener("input", (e) => {
+  updateStrength(e.target.value);
+});
+document.getElementById("registerPassword").addEventListener("blur", (e) => {
+  const v = e.target.value;
+  if (!v) showFieldError("registerPasswordError", "Password is required");
+  else if (v.length < 6) showFieldError("registerPasswordError", "Password must be at least 6 characters");
+  else clearFieldError("registerPasswordError");
+});
+document.getElementById("registerConfirm").addEventListener("blur", (e) => {
+  const pw = document.getElementById("registerPassword").value;
+  if (!e.target.value) showFieldError("registerConfirmError", "Please confirm your password");
+  else if (e.target.value !== pw) showFieldError("registerConfirmError", "Passwords do not match");
+  else clearFieldError("registerConfirmError");
+});
+
 // ── Login ──
 document.getElementById("loginForm").addEventListener("submit", async (e) => {
   e.preventDefault();

@@ -324,6 +324,42 @@ textarea { resize: vertical; min-height: 80px; }
 
 .input-wrapper { position: relative; display: flex; align-items: center; }
 .input-wrapper input { padding-right: 44px; }
+.input-wrapper input.has-icon-left { padding-left: 40px; }
+
+.input-icon-left {
+  position: absolute; left: 12px;
+  width: 15px; height: 15px;
+  color: var(--text-muted); pointer-events: none; flex-shrink: 0;
+  transition: color var(--transition);
+}
+.input-wrapper:focus-within .input-icon-left { color: var(--primary); }
+
+/* Password strength bar */
+.password-strength {
+  display: flex; align-items: center; gap: 8px; margin-top: 6px;
+}
+.strength-track {
+  flex: 1; height: 4px; background: var(--border-solid);
+  border-radius: 99px; overflow: hidden;
+}
+.strength-fill {
+  height: 100%; width: 0;
+  border-radius: 99px;
+  transition: width .3s ease, background .3s ease;
+}
+.strength-label { font-size: .72rem; font-weight: 600; white-space: nowrap; }
+
+/* Switch tab link */
+.auth-switch {
+  text-align: center; font-size: .82rem; color: var(--text-muted); margin-top: 4px;
+}
+.auth-switch button {
+  background: none; border: none; padding: 0;
+  color: var(--primary); font-weight: 600; font-size: .82rem;
+  cursor: pointer; text-decoration: underline; text-underline-offset: 2px;
+  transition: color var(--transition);
+}
+.auth-switch button:hover { color: var(--primary-hover); }
 .toggle-password {
   position: absolute; right: 12px;
   background: none; border: none;
