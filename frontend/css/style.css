@@ -766,11 +766,30 @@ input.input-error, textarea.input-error { border-color: var(--danger); }
   display: flex;
   align-items: stretch;
   box-shadow: var(--shadow-sm);
-  transition: transform var(--transition), box-shadow var(--transition);
+  transition: transform .25s ease, box-shadow .25s ease,
+              opacity .28s ease, max-height .3s ease .25s,
+              margin-bottom .3s ease .25s, padding .3s ease .25s;
   animation: fadeIn .22s ease;
   overflow: hidden;
 }
-.job-card:hover { transform: translateY(-2px); box-shadow: var(--shadow-md); }
+.job-card:hover:not(.card-deleting) { transform: translateY(-2px); box-shadow: var(--shadow-md); }
+.job-card.card-deleting {
+  transform: translateX(60px) scale(.97);
+  opacity: 0;
+  max-height: 0 !important;
+  margin-bottom: 0 !important;
+  pointer-events: none;
+}
+.kanban-card.card-deleting {
+  transform: translateX(40px) scale(.96);
+  opacity: 0;
+  max-height: 0 !important;
+  margin-bottom: 0 !important;
+  padding: 0 !important;
+  transition: transform .28s ease, opacity .28s ease,
+              max-height .28s ease .22s, margin-bottom .28s ease .22s, padding .28s ease .22s;
+  pointer-events: none;
+}
 
 .card-accent { width: 5px; flex-shrink: 0; }
 .status-applied   .card-accent { background: linear-gradient(180deg,#3b82f6,#2563eb); }
@@ -984,22 +1003,72 @@ input.input-error, textarea.input-error { border-color: var(--danger); }
 .ai-title { display: flex; align-items: center; gap: 8px; color: var(--primary); }
 .ai-subtitle { font-size: .85rem; color: var(--text-secondary); padding: 0 24px; margin-bottom: 12px; }
 
+.ai-header-actions { display: flex; align-items: center; gap: 8px; }
+.ai-clear-btn {
+  display: inline-flex; align-items: center; gap: 5px;
+  padding: 4px 10px; border-radius: 6px;
+  border: 1px solid #e5e7eb; background: #f9fafb;
+  color: var(--text-muted); font-size: .75rem; font-weight: 500;
+  cursor: pointer; transition: all .15s;
+}
+.ai-clear-btn:hover { background: #fee2e2; border-color: #fca5a5; color: #dc2626; }
+
 .ai-messages {
   flex: 1; overflow-y: auto;
   padding: 0 24px;
   display: flex; flex-direction: column; gap: 12px;
   scrollbar-width: thin; scrollbar-color: var(--border-solid) transparent;
 }
-.ai-message { display: flex; }
+
+@keyframes msgIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+.ai-message { display: flex; animation: msgIn .2s ease; }
+.ai-message.no-anim { animation: none; }
 .ai-message--bot  { justify-content: flex-start; }
 .ai-message--user { justify-content: flex-end; }
 
+/* Bubble wrapper (bot only — holds bubble + copy btn) */
+.ai-bubble-wrap { display: flex; flex-direction: column; align-items: flex-start; max-width: 80%; gap: 4px; }
+
 .ai-bubble {
-  max-width: 80%; padding: 10px 14px;
+  padding: 10px 14px;
   border-radius: 14px; font-size: .875rem; line-height: 1.6;
 }
 .ai-message--bot  .ai-bubble { background: rgba(255,247,237,.9); color: var(--text-primary); border: 1px solid #fed7aa; border-bottom-left-radius: 4px; }
-.ai-message--user .ai-bubble { background: var(--primary); color: #fff; border-bottom-right-radius: 4px; }
+.ai-message--user .ai-bubble { background: var(--primary); color: #fff; border-bottom-right-radius: 4px; max-width: 80%; }
+
+/* Markdown inside bot bubbles */
+.ai-message--bot .ai-bubble ul,
+.ai-message--bot .ai-bubble ol { margin: 6px 0; padding-left: 18px; }
+.ai-message--bot .ai-bubble li { margin: 3px 0; }
+.ai-message--bot .ai-bubble strong { font-weight: 600; }
+.ai-message--bot .ai-bubble em { font-style: italic; }
+
+/* Typing dots */
+.ai-typing-bubble { display: flex; align-items: center; gap: 5px; padding: 12px 16px; }
+.typing-dot {
+  width: 7px; height: 7px; border-radius: 50%;
+  background: var(--primary); opacity: .4;
+  animation: typingBounce 1.2s ease-in-out infinite;
+}
+.typing-dot:nth-child(2) { animation-delay: .2s; }
+.typing-dot:nth-child(3) { animation-delay: .4s; }
+@keyframes typingBounce {
+  0%,60%,100% { transform: translateY(0); opacity: .4; }
+  30%         { transform: translateY(-6px); opacity: 1; }
+}
+
+/* Copy button */
+.ai-copy-btn {
+  align-self: flex-end;
+  display: flex; align-items: center; justify-content: center;
+  width: 24px; height: 24px; border-radius: 5px;
+  border: 1px solid #e5e7eb; background: #fff;
+  color: var(--text-muted); cursor: pointer;
+  opacity: 0; transition: opacity .15s, background .15s, color .15s;
+}
+.ai-message--bot:hover .ai-copy-btn { opacity: 1; }
+.ai-copy-btn:hover { background: #f0fdf4; border-color: #86efac; color: #16a34a; }
+.ai-copy-btn--done { opacity: 1 !important; background: #f0fdf4; border-color: #86efac; color: #16a34a; }
 
 .ai-suggestions { display: flex; gap: 8px; padding: 12px 24px; flex-wrap: wrap; }
 .suggestion-chip {
@@ -1020,7 +1089,6 @@ input.input-error, textarea.input-error { border-color: var(--danger); }
   margin-top: auto;
 }
 .ai-input-row input { flex: 1; }
-.ai-typing .ai-bubble { color: var(--text-muted); font-style: italic; }
 
 /* ════════════════════════════════════════
    QUOTE & STREAK
@@ -1268,7 +1336,9 @@ input.input-error, textarea.input-error { border-color: var(--danger); }
   /* AI modal — tablet */
   .ai-subtitle { padding: 0 16px; font-size: .82rem; }
   .ai-messages { padding: 0 16px; gap: 10px; }
-  .ai-bubble { max-width: 88%; font-size: .85rem; }
+  .ai-bubble { font-size: .85rem; }
+  .ai-bubble-wrap { max-width: 88%; }
+  .ai-message--user .ai-bubble { max-width: 88%; }
   .ai-suggestions { padding: 10px 16px; gap: 6px; }
   .suggestion-chip { padding: 7px 12px; font-size: .78rem; }
   .ai-input-row { padding: 12px 16px; gap: 8px; }
@@ -1325,7 +1395,9 @@ input.input-error, textarea.input-error { border-color: var(--danger); }
   .ai-title h2 { font-size: 1rem; }
   .ai-subtitle { display: none; }
   .ai-messages { padding: 0 14px; gap: 10px; }
-  .ai-bubble { max-width: 90%; padding: 9px 12px; font-size: .84rem; }
+  .ai-bubble { padding: 9px 12px; font-size: .84rem; }
+  .ai-bubble-wrap { max-width: 90%; }
+  .ai-message--user .ai-bubble { max-width: 90%; }
   .ai-suggestions { padding: 8px 14px; gap: 6px; flex-wrap: wrap; }
   .suggestion-chip { padding: 8px 12px; font-size: .77rem; flex: 1 1 auto; text-align: center; }
   .ai-input-row { padding: 10px 14px 14px; gap: 8px; }

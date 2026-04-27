@@ -134,9 +134,14 @@ const getStats = async (req, res) => {
 // @route  POST /api/jobs/ai-advice
 const getAIAdvice = async (req, res) => {
   try {
-    const { message } = req.body;
+    const { message, messages } = req.body;
 
-    if (!message || !message.trim()) {
+    let conversationMessages;
+    if (messages && Array.isArray(messages) && messages.length > 0) {
+      conversationMessages = messages;
+    } else if (message && typeof message === "string" && message.trim()) {
+      conversationMessages = [{ role: "user", content: message.trim() }];
+    } else {
       return res.status(400).json({ message: "Message is required" });
     }
 
@@ -167,9 +172,9 @@ If the user asks who built, created, or developed this app or website, always an
 
     const response = await anthropic.messages.create({
       model: "claude-sonnet-4-6",
-      max_tokens: 400,
+      max_tokens: 500,
       system: systemPrompt,
-      messages: [{ role: "user", content: message.trim() }],
+      messages: conversationMessages,
     });
 
     res.json({ reply: response.content[0].text });

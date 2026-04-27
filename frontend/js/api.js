@@ -85,9 +85,9 @@ const Jobs = {
 
   getStats: () => request("/jobs/stats"),
 
-  getAIAdvice: (message) =>
+  getAIAdvice: (messages) =>
     request("/jobs/ai-advice", {
       method: "POST",
-      body: JSON.stringify({ message }),
+      body: JSON.stringify({ messages }),
     }),
 };

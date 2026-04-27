@@ -8,9 +8,14 @@ function navigateTo(url) {
 }
 
 // ── State ──
-let jobToDeleteId = null;
-let debounceTimer = null;
-let currentView   = localStorage.getItem("jobtrace_view") || "list";
+let jobToDeleteId   = null;
+let cardToDelete    = null;
+let debounceTimer   = null;
+let currentView     = localStorage.getItem("jobtrace_view") || "list";
+let lastStats       = { total: 0, Applied: 0, Interview: 0, Offer: 0, Rejected: 0 };
+let chatHistory     = [];
+let chatRendered    = false;
+const CHAT_KEY      = "jobtrace_chat";
 
 // ── Motivational quotes ──
 const QUOTES = [
@@ -55,11 +60,13 @@ const hour = new Date().getHours();
 async function loadStats() {
   try {
     const { stats } = await Jobs.getStats();
+    lastStats = stats;
     animateCounter(document.getElementById("statTotal"),     stats.total);
     animateCounter(document.getElementById("statApplied"),   stats.Applied);
     animateCounter(document.getElementById("statInterview"), stats.Interview);
     animateCounter(document.getElementById("statOffer"),     stats.Offer);
     animateCounter(document.getElementById("statRejected"),  stats.Rejected);
+    updateSuggestionChips(stats);
   } catch {
     // silent
   }
@@ -179,6 +186,7 @@ function renderKanban(jobs) {
 function createKanbanCard(job) {
   const card = document.createElement("div");
   card.className = "kanban-card";
+  card.dataset.id = job._id;
   const date = new Date(job.dateApplied).toLocaleDateString("en-GB", { day: "numeric", month: "short" });
   const notesSnippet = job.notes ? `<div class="kcard-notes">"${escapeHTML(job.notes).substring(0, 50)}${job.notes.length > 50 ? "…" : ""}"</div>` : "";
   card.innerHTML = `
@@ -439,6 +447,7 @@ function setModalLoading(loading) {
 // ════════════════════════════════════════
 function openDeleteModal(id, companyName) {
   jobToDeleteId = id;
+  cardToDelete  = document.querySelector(`.job-card[data-id="${id}"], .kanban-card[data-id="${id}"]`);
   document.getElementById("deleteJobName").textContent = companyName;
   document.getElementById("deleteModalOverlay").hidden = false;
 }
@@ -462,8 +471,25 @@ async function confirmDelete() {
     await Jobs.delete(jobToDeleteId);
     document.getElementById("deleteModalOverlay").hidden = true;
     showToast("Application deleted.", "success");
-    jobToDeleteId = null;
-    await Promise.all([loadJobs(), loadStats()]);
+
+    if (cardToDelete) {
+      cardToDelete.style.maxHeight = cardToDelete.offsetHeight + "px";
+      cardToDelete.style.overflow  = "hidden";
+      requestAnimationFrame(() => {
+        cardToDelete.classList.add("card-deleting");
+        const ref = cardToDelete;
+        cardToDelete  = null;
+        jobToDeleteId = null;
+        setTimeout(async () => {
+          ref.remove();
+          await Promise.all([loadJobs(), loadStats()]);
+        }, 560);
+      });
+    } else {
+      jobToDeleteId = null;
+      cardToDelete  = null;
+      await Promise.all([loadJobs(), loadStats()]);
+    }
   } catch (err) {
     showToast(err.message, "error");
     document.getElementById("deleteModalOverlay").hidden = true;
@@ -475,10 +501,97 @@ async function confirmDelete() {
 }
 
 // ════════════════════════════════════════
+// ════════════════════════════════════════
 // AI ADVISOR
 // ════════════════════════════════════════
+
+// ── Markdown renderer ──
+function renderMarkdown(raw) {
+  let text = raw
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;");
+
+  text = text.replace(/\*\*([^*\n]+)\*\*/g, "<strong>$1</strong>");
+  text = text.replace(/\*([^*\n]+)\*/g,     "<em>$1</em>");
+
+  const lines = text.split("\n");
+  const out   = [];
+  let inUl = false, inOl = false;
+
+  for (const line of lines) {
+    const ulMatch = line.match(/^[-•]\s+(.+)/);
+    const olMatch = line.match(/^\d+\.\s+(.+)/);
+    if (ulMatch) {
+      if (inOl) { out.push("</ol>"); inOl = false; }
+      if (!inUl) { out.push("<ul>"); inUl = true; }
+      out.push(`<li>${ulMatch[1]}</li>`);
+    } else if (olMatch) {
+      if (inUl) { out.push("</ul>"); inUl = false; }
+      if (!inOl) { out.push("<ol>"); inOl = true; }
+      out.push(`<li>${olMatch[1]}</li>`);
+    } else {
+      if (inUl) { out.push("</ul>"); inUl = false; }
+      if (inOl) { out.push("</ol>"); inOl = false; }
+      out.push(line.trim() === "" ? "<br>" : line + "<br>");
+    }
+  }
+  if (inUl) out.push("</ul>");
+  if (inOl) out.push("</ol>");
+  return out.join("").replace(/(<br>\s*)+$/, "");
+}
+
+// ── Chat persistence ──
+function saveChatHistory() {
+  localStorage.setItem(CHAT_KEY, JSON.stringify(chatHistory));
+}
+
+// ── Context-aware suggestion chips ──
+function updateSuggestionChips(stats) {
+  const el = document.getElementById("aiSuggestions");
+  if (!el) return;
+
+  const pool = [];
+  if (stats.total === 0) {
+    pool.push("How do I start my job search?", "What makes a strong resume?", "Tips for cold outreach");
+  } else {
+    if (stats.Rejected > 3)                          pool.unshift("Why am I getting so many rejections?");
+    if (stats.Applied > 4 && stats.Interview === 0)  pool.unshift("How do I get more interviews?");
+    if (stats.Interview > 0)                         pool.push("How do I ace my next interview?");
+    if (stats.Offer > 0)                             pool.push("How do I negotiate my salary?");
+    pool.push("How's my progress?", "Write a follow-up email template", "Tips to stand out");
+  }
+
+  el.innerHTML = "";
+  pool.slice(0, 4).forEach((label) => {
+    const btn = document.createElement("button");
+    btn.className = "suggestion-chip";
+    btn.textContent = label;
+    btn.addEventListener("click", () => sendSuggestion(btn));
+    el.appendChild(btn);
+  });
+}
+
+// ── Open / close ──
 function openAI() {
   document.getElementById("aiModalOverlay").hidden = false;
+
+  if (!chatRendered) {
+    chatRendered = true;
+    try {
+      const saved = JSON.parse(localStorage.getItem(CHAT_KEY) || "[]");
+      if (saved.length > 0) {
+        chatHistory = saved;
+        saved.forEach((msg) =>
+          appendAIMessage(msg.content, msg.role === "assistant" ? "bot" : "user", false)
+        );
+      }
+    } catch { /* ignore corrupt storage */ }
+  }
+
+  updateSuggestionChips(lastStats);
+  const messagesEl = document.getElementById("aiMessages");
+  messagesEl.scrollTop = messagesEl.scrollHeight;
   document.getElementById("aiInput").focus();
 }
 
@@ -487,6 +600,19 @@ function closeAI(event) {
   document.getElementById("aiModalOverlay").hidden = true;
 }
 
+function clearChat() {
+  chatHistory  = [];
+  chatRendered = true;
+  localStorage.removeItem(CHAT_KEY);
+  document.getElementById("aiMessages").innerHTML = `
+    <div class="ai-message ai-message--bot">
+      <div class="ai-bubble-wrap">
+        <div class="ai-bubble">Hi! I'm your JobTrace AI advisor. I can see your application stats and give you personalized career advice. What would you like help with?</div>
+      </div>
+    </div>`;
+}
+
+// ── Send ──
 function sendSuggestion(btn) {
   document.getElementById("aiInput").value = btn.textContent;
   sendAIMessage(new Event("submit"));
@@ -499,6 +625,7 @@ async function sendAIMessage(e) {
   if (!message) return;
 
   input.value = "";
+  chatHistory.push({ role: "user", content: message });
   appendAIMessage(message, "user");
   const typingEl = appendTypingIndicator();
 
@@ -508,11 +635,14 @@ async function sendAIMessage(e) {
   sendBtn.querySelector(".btn-spinner").hidden = false;
 
   try {
-    const { reply } = await Jobs.getAIAdvice(message);
+    const { reply } = await Jobs.getAIAdvice(chatHistory);
     typingEl.remove();
+    chatHistory.push({ role: "assistant", content: reply });
+    saveChatHistory();
     appendAIMessage(reply, "bot");
   } catch {
     typingEl.remove();
+    chatHistory.pop(); // remove the user message that failed
     appendAIMessage("Sorry, I couldn't get a response. Please try again.", "bot");
   } finally {
     sendBtn.disabled = false;
@@ -522,24 +652,54 @@ async function sendAIMessage(e) {
   }
 }
 
-function appendAIMessage(text, role) {
-  const messages = document.getElementById("aiMessages");
+// ── Render message ──
+function appendAIMessage(text, role, animate = true) {
+  const messagesEl = document.getElementById("aiMessages");
   const div = document.createElement("div");
-  div.className = `ai-message ai-message--${role}`;
-  div.innerHTML = `<div class="ai-bubble">${escapeHTML(text)}</div>`;
-  messages.appendChild(div);
-  messages.scrollTop = messages.scrollHeight;
+  div.className = `ai-message ai-message--${role}${animate ? "" : " no-anim"}`;
+
+  if (role === "bot") {
+    div.innerHTML = `
+      <div class="ai-bubble-wrap">
+        <div class="ai-bubble">${renderMarkdown(text)}</div>
+        <button class="ai-copy-btn" aria-label="Copy response" title="Copy response">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="13" height="13">
+            <rect x="9" y="9" width="13" height="13" rx="2"/>
+            <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+          </svg>
+        </button>
+      </div>`;
+    div.querySelector(".ai-copy-btn").addEventListener("click", () => copyAIMessage(div.querySelector(".ai-copy-btn"), text));
+  } else {
+    div.innerHTML = `<div class="ai-bubble">${escapeHTML(text)}</div>`;
+  }
+
+  messagesEl.appendChild(div);
+  messagesEl.scrollTop = messagesEl.scrollHeight;
   return div;
 }
 
 function appendTypingIndicator() {
-  const messages = document.getElementById("aiMessages");
+  const messagesEl = document.getElementById("aiMessages");
   const div = document.createElement("div");
-  div.className = "ai-message ai-message--bot ai-typing";
-  div.innerHTML = `<div class="ai-bubble">Thinking…</div>`;
-  messages.appendChild(div);
-  messages.scrollTop = messages.scrollHeight;
+  div.className = "ai-message ai-message--bot";
+  div.innerHTML = `<div class="ai-bubble-wrap"><div class="ai-bubble ai-typing-bubble"><span class="typing-dot"></span><span class="typing-dot"></span><span class="typing-dot"></span></div></div>`;
+  messagesEl.appendChild(div);
+  messagesEl.scrollTop = messagesEl.scrollHeight;
   return div;
+}
+
+// ── Copy ──
+function copyAIMessage(btn, text) {
+  navigator.clipboard.writeText(text).then(() => {
+    const original = btn.innerHTML;
+    btn.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="13" height="13"><polyline points="20 6 9 17 4 12"/></svg>`;
+    btn.classList.add("ai-copy-btn--done");
+    setTimeout(() => {
+      btn.innerHTML = original;
+      btn.classList.remove("ai-copy-btn--done");
+    }, 1500);
+  });
 }
 
 // ════════════════════════════════════════
