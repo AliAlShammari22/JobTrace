@@ -153,7 +153,7 @@
           <!-- Auth Card -->
           <div class="auth-card">
 
-            <!-- Tabs -->
+            <!-- Tabs sit directly on card, no padding -->
             <div class="auth-tabs">
               <button class="auth-tab active" id="loginTab" onclick="switchTab('login')">
                 Sign In
@@ -163,6 +163,7 @@
               </button>
             </div>
 
+            <div class="auth-card-inner">
             <!-- Alert -->
             <div class="alert" id="authAlert" role="alert" aria-live="polite"></div>
 
@@ -262,6 +263,7 @@
               </button>
               <p class="auth-switch">Already have an account? <button type="button" onclick="switchTab('login')">Sign in</button></p>
             </form>
+            </div><!-- end auth-card-inner -->
 
           </div>
 
