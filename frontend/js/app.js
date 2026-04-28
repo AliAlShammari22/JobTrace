@@ -16,6 +16,7 @@ let lastStats       = { total: 0, Applied: 0, Interview: 0, Offer: 0, Rejected: 
 let chatHistory     = [];
 let chatRendered    = false;
 const CHAT_KEY      = "jobtrace_chat";
+const getChatKey    = () => { const u = getUser(); return u?._id ? `${CHAT_KEY}_${u._id}` : CHAT_KEY; };
 
 // ── Motivational quotes ──
 const QUOTES = [
@@ -745,7 +746,7 @@ function renderMarkdown(raw) {
 
 // ── Chat persistence ──
 function saveChatHistory() {
-  localStorage.setItem(CHAT_KEY, JSON.stringify(chatHistory));
+  localStorage.setItem(getChatKey(), JSON.stringify(chatHistory));
 }
 
 // ── Context-aware suggestion chips ──
@@ -781,7 +782,7 @@ function openAI() {
   if (!chatRendered) {
     chatRendered = true;
     try {
-      const saved = JSON.parse(localStorage.getItem(CHAT_KEY) || "[]");
+      const saved = JSON.parse(localStorage.getItem(getChatKey()) || "[]");
       if (saved.length > 0) {
         chatHistory = saved;
         saved.forEach((msg) =>
@@ -805,7 +806,7 @@ function closeAI(event) {
 function clearChat() {
   chatHistory  = [];
   chatRendered = true;
-  localStorage.removeItem(CHAT_KEY);
+  localStorage.removeItem(getChatKey());
   document.getElementById("aiMessages").innerHTML = `
     <div class="ai-message ai-message--bot">
       <div class="ai-bubble-wrap">
@@ -989,7 +990,7 @@ function renderHeatmap(jobs) {
         continue;
       }
 
-      const ds    = date.toISOString().substring(0, 10);
+      const ds    = `${date.getFullYear()}-${String(date.getMonth()+1).padStart(2,'0')}-${String(date.getDate()).padStart(2,'0')}`;
       const count = counts[ds] || 0;
       totalInRange += count;
 
@@ -1027,6 +1028,7 @@ function renderHeatmap(jobs) {
 // ONBOARDING TOUR
 // ════════════════════════════════════════
 const TOUR_KEY = "jobtrace_onboarded";
+const getTourKey = () => { const u = getUser(); return u?._id ? `${TOUR_KEY}_${u._id}` : TOUR_KEY; };
 const TOUR_STEPS = [
   {
     target: "addJobBtn",
@@ -1048,7 +1050,7 @@ const TOUR_STEPS = [
 let tourStep = 0;
 
 function maybeStartTour() {
-  if (!localStorage.getItem(TOUR_KEY)) setTimeout(startTour, 900);
+  if (!localStorage.getItem(getTourKey())) setTimeout(startTour, 900);
 }
 
 function startTour() {
@@ -1098,7 +1100,7 @@ function tourPrev() {
 }
 
 function endTour() {
-  localStorage.setItem(TOUR_KEY, "1");
+  localStorage.setItem(getTourKey(), "1");
   document.getElementById("tourOverlay").hidden  = true;
   document.getElementById("tourTooltip").hidden  = true;
   document.querySelectorAll(".tour-highlight").forEach((el) => el.classList.remove("tour-highlight"));
