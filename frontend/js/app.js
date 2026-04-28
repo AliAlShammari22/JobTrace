@@ -101,20 +101,24 @@ const MILESTONES = [
 
 function checkMilestones(stats) {
   const shelf = document.getElementById("milestoneShelf");
-  const earned = MILESTONES.filter((m) => m.check(stats));
-  if (!earned.length) { shelf.hidden = true; return; }
   shelf.hidden = false;
 
-  const prev = JSON.parse(localStorage.getItem("jobtrace_milestones") || "[]");
+  const prev    = JSON.parse(localStorage.getItem("jobtrace_milestones") || "[]");
+  const earned  = MILESTONES.filter((m) => m.check(stats));
+  const earnedIds = earned.map((m) => m.id);
+
   earned.filter((m) => !prev.includes(m.id))
         .forEach((m) => showToast(`${m.icon} Badge unlocked: ${m.label}!`, "success"));
-  localStorage.setItem("jobtrace_milestones", JSON.stringify(earned.map((m) => m.id)));
+  localStorage.setItem("jobtrace_milestones", JSON.stringify(earnedIds));
 
-  document.getElementById("milestoneItems").innerHTML = earned.map((m) => `
-    <div class="milestone-badge" title="${m.label}">
-      <span class="ms-icon">${m.icon}</span>
-      <span class="ms-label">${m.label}</span>
-    </div>`).join("");
+  document.getElementById("milestoneItems").innerHTML = MILESTONES.map((m) => {
+    const unlocked = earnedIds.includes(m.id);
+    return `
+    <div class="milestone-badge ${unlocked ? "milestone-unlocked" : "milestone-locked"}" title="${unlocked ? m.label : "???"}" >
+      <span class="ms-icon">${unlocked ? m.icon : "🔒"}</span>
+      <span class="ms-label">${unlocked ? m.label : "???"}</span>
+    </div>`;
+  }).join("");
 }
 
 function renderFunnel(stats) {
@@ -331,15 +335,6 @@ function createKanbanCard(job) {
   return card;
 }
 
-const AVATAR_COLORS = [
-  "#6366f1","#3b82f6","#0ea5e9","#14b8a6",
-  "#22c55e","#f59e0b","#ef4444","#ec4899","#8b5cf6","#f97316",
-];
-function avatarColor(name) {
-  let h = 0;
-  for (let i = 0; i < name.length; i++) h = name.charCodeAt(i) + ((h << 5) - h);
-  return AVATAR_COLORS[Math.abs(h) % AVATAR_COLORS.length];
-}
 
 function guessDomain(name) {
   return name.toLowerCase().replace(/[^a-z0-9]/g, "").split(/\s+/)[0] + ".com";
@@ -356,18 +351,17 @@ function createJobCard(job) {
   const notesText = job.notes ? escapeHTML(job.notes) : "";
   const domain    = guessDomain(job.companyName);
   const initial   = job.companyName.charAt(0).toUpperCase();
-  const color     = avatarColor(job.companyName);
 
   card.innerHTML = `
     <div class="card-accent"></div>
     <div class="card-body">
       <div class="card-header">
         <div class="company-info">
-          <div class="company-avatar" style="background:${color}">
+          <div class="company-avatar">
             <span class="avatar-initial">${initial}</span>
             <img class="avatar-favicon"
                  src="https://logo.clearbit.com/${domain}"
-                 alt=""
+                 alt="${escapeHTML(job.companyName)} logo"
                  onload="this.classList.add('loaded')"
                  onerror="this.src='https://www.google.com/s2/favicons?sz=64&domain=${domain}'">
           </div>

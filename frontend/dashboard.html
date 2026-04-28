@@ -11,6 +11,7 @@
       rel="stylesheet"
     />
     <link rel="stylesheet" href="css/style.css" />
+    <link rel="icon" type="image/svg+xml" href="favicon.svg" />
   </head>
   <body class="dashboard-page">
 
@@ -25,7 +26,7 @@
           <span>JobTrace</span>
         </div>
         <div class="header-actions">
-<button class="btn btn-ghost btn-sm" id="aiAdvisorBtn" onclick="openAI()">
+          <button class="btn btn-ghost btn-sm" id="aiAdvisorBtn" onclick="openAI()">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="15" height="15">
               <path d="M12 2a10 10 0 1 0 10 10A10 10 0 0 0 12 2zm0 18a8 8 0 1 1 8-8 8 8 0 0 1-8 8z"/>
               <path d="M12 6v6l4 2"/>
@@ -52,69 +53,43 @@
           </div>
           <div class="welcome-date" id="welcomeDate"></div>
         </div>
-        <!-- Quote inline -->
         <div class="welcome-quote" id="quoteBanner"></div>
       </section>
 
       <!-- Stats Grid -->
       <section class="stats-grid" id="statsGrid">
         <div class="stat-card stat-total">
-          <div class="stat-card-top">
-            <div class="stat-icon-wrap stat-icon-total">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20">
-                <rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/>
-              </svg>
-            </div>
-          </div>
+          <div class="stat-card-top"><div class="stat-icon-wrap stat-icon-total">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>
+          </div></div>
           <span class="stat-value" id="statTotal">—</span>
           <span class="stat-label">Total Jobs</span>
         </div>
-
         <div class="stat-card stat-applied">
-          <div class="stat-card-top">
-            <div class="stat-icon-wrap stat-icon-applied">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20">
-                <path d="M22 2L11 13"/><path d="M22 2L15 22 11 13 2 9l20-7z"/>
-              </svg>
-            </div>
-          </div>
+          <div class="stat-card-top"><div class="stat-icon-wrap stat-icon-applied">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20"><path d="M22 2L11 13"/><path d="M22 2L15 22 11 13 2 9l20-7z"/></svg>
+          </div></div>
           <span class="stat-value" id="statApplied">—</span>
           <span class="stat-label">Applied</span>
         </div>
-
         <div class="stat-card stat-interview">
-          <div class="stat-card-top">
-            <div class="stat-icon-wrap stat-icon-interview">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20">
-                <rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/>
-                <line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>
-              </svg>
-            </div>
-          </div>
+          <div class="stat-card-top"><div class="stat-icon-wrap stat-icon-interview">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+          </div></div>
           <span class="stat-value" id="statInterview">—</span>
           <span class="stat-label">Interviews</span>
         </div>
-
         <div class="stat-card stat-offer">
-          <div class="stat-card-top">
-            <div class="stat-icon-wrap stat-icon-offer">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20">
-                <polyline points="20 6 9 17 4 12"/>
-              </svg>
-            </div>
-          </div>
+          <div class="stat-card-top"><div class="stat-icon-wrap stat-icon-offer">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20"><polyline points="20 6 9 17 4 12"/></svg>
+          </div></div>
           <span class="stat-value" id="statOffer">—</span>
           <span class="stat-label">Offers</span>
         </div>
-
         <div class="stat-card stat-rejected">
-          <div class="stat-card-top">
-            <div class="stat-icon-wrap stat-icon-rejected">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20">
-                <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
-              </svg>
-            </div>
-          </div>
+          <div class="stat-card-top"><div class="stat-icon-wrap stat-icon-rejected">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+          </div></div>
           <span class="stat-value" id="statRejected">—</span>
           <span class="stat-label">Rejected</span>
         </div>
