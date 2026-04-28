@@ -16,7 +16,7 @@ let lastStats       = { total: 0, Applied: 0, Interview: 0, Offer: 0, Rejected: 
 let chatHistory     = [];
 let chatRendered    = false;
 const CHAT_KEY      = "jobtrace_chat";
-const getChatKey    = () => { const u = getUser(); return u?._id ? `${CHAT_KEY}_${u._id}` : CHAT_KEY; };
+const getChatKey    = () => { const u = getUser(); const id = u?.id || u?._id; return id ? `${CHAT_KEY}_${id}` : CHAT_KEY; };
 
 // ── Motivational quotes ──
 const QUOTES = [
@@ -55,6 +55,14 @@ const hour = new Date().getHours();
   loadHeatmap();
   maybeStartTour();
   document.getElementById("dateApplied").valueAsDate = new Date();
+
+  // Auto-refresh: reload data every 60 seconds
+  setInterval(() => { loadStats(); loadJobs(); loadHeatmap(); }, 60000);
+
+  // Also refresh when the user comes back to this tab
+  document.addEventListener("visibilitychange", () => {
+    if (document.visibilityState === "visible") { loadStats(); loadJobs(); loadHeatmap(); }
+  });
 
   // 3D tilt on stat cards
   document.querySelectorAll(".stat-card").forEach((card) => {
@@ -299,7 +307,8 @@ function renderKanban(jobs) {
 function createKanbanCard(job) {
   const card = document.createElement("div");
   card.className = "kanban-card";
-  card.dataset.id = job._id;
+  card.dataset.id     = job._id;
+  card.dataset.status = job.status;
   const date = new Date(job.dateApplied).toLocaleDateString("en-GB", { day: "numeric", month: "short" });
   const notesSnippet = job.notes ? `<div class="kcard-notes">"${escapeHTML(job.notes).substring(0, 50)}${job.notes.length > 50 ? "…" : ""}"</div>` : "";
   card.innerHTML = `
@@ -344,7 +353,8 @@ function guessDomain(name) {
 function createJobCard(job) {
   const card = document.createElement("div");
   card.className = `job-card status-${job.status.toLowerCase()}`;
-  card.dataset.id = job._id;
+  card.dataset.id     = job._id;
+  card.dataset.status = job.status;
 
   const date     = new Date(job.dateApplied).toLocaleDateString("en-GB", {
     day: "numeric", month: "short", year: "numeric",
@@ -645,6 +655,20 @@ function confirmDelete() {
     card.style.overflow  = "hidden";
     requestAnimationFrame(() => card.classList.add("card-deleting"));
   }
+
+  // Optimistically decrement counters right away
+  const deletedStatus = card?.dataset.status;
+  const s = { ...lastStats };
+  s.total = Math.max(0, s.total - 1);
+  if (deletedStatus && s[deletedStatus] !== undefined) s[deletedStatus] = Math.max(0, s[deletedStatus] - 1);
+  lastStats = s;
+  animateCounter(document.getElementById("statTotal"),     s.total);
+  animateCounter(document.getElementById("statApplied"),   s.Applied);
+  animateCounter(document.getElementById("statInterview"), s.Interview);
+  animateCounter(document.getElementById("statOffer"),     s.Offer);
+  animateCounter(document.getElementById("statRejected"),  s.Rejected);
+  renderFunnel(s);
+  checkMilestones(s);
 
   // Commit the delete after the undo window
   const deleteTimer = setTimeout(async () => {
@@ -949,12 +973,12 @@ async function loadHeatmap() {
 
 function renderHeatmap(jobs) {
   const section = document.getElementById("heatmapSection");
-  if (!jobs.length) { section.hidden = true; return; }
   section.hidden = false;
 
   const counts = {};
   jobs.forEach((j) => {
-    const d = j.dateApplied.substring(0, 10);
+    const raw = new Date(j.dateApplied);
+    const d = `${raw.getFullYear()}-${String(raw.getMonth()+1).padStart(2,'0')}-${String(raw.getDate()).padStart(2,'0')}`;
     counts[d] = (counts[d] || 0) + 1;
   });
 
@@ -962,10 +986,13 @@ function renderHeatmap(jobs) {
   const today = new Date();
   today.setHours(0, 0, 0, 0);
 
-  const start = new Date(today);
-  start.setDate(today.getDate() - WEEKS * 7 + 1);
-  const dow = start.getDay();
-  start.setDate(start.getDate() - (dow === 0 ? 6 : dow - 1));
+  // Pin the last column to the CURRENT week so today is always visible.
+  // Find this week's Monday, then go back (WEEKS-1) weeks for the grid start.
+  const todayDow = today.getDay();
+  const currentMonday = new Date(today);
+  currentMonday.setDate(today.getDate() - (todayDow === 0 ? 6 : todayDow - 1));
+  const start = new Date(currentMonday);
+  start.setDate(currentMonday.getDate() - (WEEKS - 1) * 7);
 
   const grid     = document.getElementById("heatmapGrid");
   const monthsEl = document.getElementById("heatmapMonths");
@@ -1028,7 +1055,7 @@ function renderHeatmap(jobs) {
 // ONBOARDING TOUR
 // ════════════════════════════════════════
 const TOUR_KEY = "jobtrace_onboarded";
-const getTourKey = () => { const u = getUser(); return u?._id ? `${TOUR_KEY}_${u._id}` : TOUR_KEY; };
+const getTourKey = () => { const u = getUser(); const id = u?.id || u?._id; return id ? `${TOUR_KEY}_${id}` : TOUR_KEY; };
 const TOUR_STEPS = [
   {
     target: "addJobBtn",
